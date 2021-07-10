@@ -81,7 +81,7 @@ def sech(Pulse):
     :return:
     """
 
-    for param in ['n', 'beta']
+    for param in ['n', 'beta']:
         if not hasattr(Pulse, param):
             raise AttributeError('Pulse object must have both n and beta defined in kwargs')
 
@@ -220,4 +220,4 @@ def uniformq(Pulse):
     freq = (Pulse.freq[1] - Pulse.freq[0]) * (freq - 1/2)
     phase = 2 * np.pi * cumtrapz(freq, Pulse.ti)
     phase += np.abs(min(phase))
-    
+
