@@ -11,6 +11,9 @@ def fm_func(func):
     FrequencyModulations[func.__name__] = func
     return func
 
+def npsech(x):
+    return 1 / np.cosh(x)
+
 # Amp mods
 @am_func
 def rectangular(Pulse):
@@ -90,13 +93,13 @@ def sech(Pulse):
 
     if len(Pulse.n) == 1:
         if Pulse.n == 1:
-            amp = np.sech(Pulse.beta * Pulse.ti / Pulse.pulse_time)
+            amp = npsech(Pulse.beta * Pulse.ti / Pulse.pulse_time)
         else:
-            amp = np.sech(Pulse.beta, * 0.5 * (2 * Pulse.ti / Pulse.pulse_time) ** Pulse.n)
+            amp = npsech(Pulse.beta, * 0.5 * (2 * Pulse.ti / Pulse.pulse_time) ** Pulse.n)
     elif len(Pulse.n) == 2:
         amp = np.empty_like(Pulse.ti)
-        amp[Pulse.ti < 0] = np.sech(Pulse.beta, * 0.5 * (2 * Pulse.ti[Pulse.ti < 0] / Pulse.pulse_time) ** Pulse.n[0])
-        amp[Pulse.ti >= 0] = np.sech(Pulse.beta, * 0.5 * (2 * Pulse.ti[Pulse.ti >= 0] / Pulse.pulse_time) ** Pulse.n[1])
+        amp[Pulse.ti < 0] = npsech(Pulse.beta, * 0.5 * (2 * Pulse.ti[Pulse.ti < 0] / Pulse.pulse_time) ** Pulse.n[0])
+        amp[Pulse.ti >= 0] = npsech(Pulse.beta, * 0.5 * (2 * Pulse.ti[Pulse.ti >= 0] / Pulse.pulse_time) ** Pulse.n[1])
     else:
         raise ValueError('sech `n` parameter must have at least one and no more than 2 elements')
 
@@ -216,8 +219,9 @@ def uniformq(Pulse):
     :return:
     """
 
-    freq = cumtrapz(Pulse.amplitude_modulation**2 / np.trapz(Pulse.amplitude_modulation**2, Pulse.ti, ), Pulse.ti)
+    freq = cumtrapz(Pulse.amplitude_modulation**2 / np.trapz(Pulse.amplitude_modulation**2, Pulse.ti, ), Pulse.ti, initial=0)
     freq = (Pulse.freq[1] - Pulse.freq[0]) * (freq - 1/2)
-    phase = 2 * np.pi * cumtrapz(freq, Pulse.ti)
+    phase = 2 * np.pi * cumtrapz(freq, Pulse.ti, initial=0)
     phase += np.abs(min(phase))
+    return freq, phase
 
