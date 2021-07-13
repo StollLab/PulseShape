@@ -8,17 +8,17 @@ fwhm2sigma = 1 / sigma2fwhm
 
 def test_bwcomp():
     profile = np.loadtxt('data/Transferfunction.dat')
-    myPulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], type='sech/tanh', beta=10, profile=profile)
+    pulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], type='sech/tanh', beta=10, profile=profile)
 
     ans = np.genfromtxt("data/sechtanh.csv", delimiter=',')
     ans = ans[:, 0] + 1j * ans[:, 1]
-    np.testing.assert_almost_equal(myPulse.IQ, ans)
+    np.testing.assert_almost_equal(pulse.IQ, ans)
 
 
 def test_gaussian_rd():
     profile = np.loadtxt('data/Transferfunction.dat').T
 
-    myPulse = Pulse(pulse_time=0.060,
+    pulse = Pulse(pulse_time=0.060,
                     time_step=0.000625,
                     flip=np.pi,
                     type='gaussian',
@@ -27,7 +27,7 @@ def test_gaussian_rd():
 
     ans = np.genfromtxt("data/gaussian.csv", delimiter=',', dtype=complex,
                         converters={0: lambda x: complex(x.decode('utf8').replace('i', 'j'))})
-    np.testing.assert_almost_equal(myPulse.IQ, ans)
+    np.testing.assert_almost_equal(pulse.IQ, ans)
 
 
 def test_rectrangular():

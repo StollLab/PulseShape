@@ -123,3 +123,5 @@ from PulseShape import Pulse
     ax2.set_xlabel('Time (ns)')
     ax2.set_ylabel('Frequency (MHz)')
     plt.show()
+```
+<img src="img/AM_FM.png" width="400" class="center"/>
