@@ -2,17 +2,22 @@ import numpy as np
 from scipy.integrate import cumtrapz
 
 AmplitudeModulations = {}
+FrequencyModulations = {}
+
+
 def am_func(func):
     AmplitudeModulations[func.__name__] = func
     return func
 
-FrequencyModulations = {}
+
 def fm_func(func):
     FrequencyModulations[func.__name__] = func
     return func
 
+
 def npsech(x):
     return 1 / np.cosh(x)
+
 
 # Amp mods
 @am_func
@@ -24,6 +29,7 @@ def rectangular(Pulse):
     :return:
     """
     return np.ones(len(Pulse.time))
+
 
 @am_func
 def gaussian(Pulse):
@@ -38,6 +44,9 @@ def gaussian(Pulse):
             raise AttributeError('Pulse object must have wither `tFWHM` or `trunc` defined in kwargs')
         else:
             Pulse.tFWHM = np.sqrt(-(Pulse.pulse_time**2)/np.log2(Pulse.trunc))
+
+    if Pulse.tFWHM == 0:
+        Pulse.tFWHM = Pulse.time_step / 2
 
     return np.exp(-(4 * np.log(2) * Pulse.ti ** 2) / Pulse.tFWHM ** 2)
 

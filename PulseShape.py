@@ -38,9 +38,9 @@ class Pulse:
         ntype = len(type.split('/'))
         if ntype == 2:
             am, fm = type.split('/')
-            self.amp_mod, self.freq_mod = AmplitudeModulations[am], FrequencyModulations[fm]
+            self.am_func, self.fm_func = AmplitudeModulations[am], FrequencyModulations[fm]
         elif ntype == 1:
-            self.amp_mod, self.freq_mod = AmplitudeModulations[type], FrequencyModulations['none']
+            self.am_func, self.fm_func = AmplitudeModulations[type], FrequencyModulations['none']
         else:
             raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
 
@@ -50,7 +50,7 @@ class Pulse:
         self.ti = self.time - self.pulse_time / 2
 
         self._shape()
-        if hasattr(self, 'profile'):
+        if hasattr(self, 'profile') and self.fm_func.__name__ != 'none':
             self.bw_comp()
 
         if self.amp is None:
@@ -60,13 +60,14 @@ class Pulse:
 
 
     def _shape(self):
-        self.amplitude_modulation = self.amp_mod(self)
-        self.frequency_modulation, self.phase = self.freq_mod(self)
+        self.amplitude_modulation = self.am_func(self)
+        self.frequency_modulation, self.phase = self.fm_func(self)
 
     def bw_comp(self):
         nu0 = self.frequency_modulation.copy()
         A0 = self.amplitude_modulation.copy()
         newaxis = nu0 + np.mean(self.freq) + self.mwFreq * 1e3
+
         if hasattr(self, 'profile'):
             f = self.profile[0] * 1e3
             H = self.profile[1]
@@ -89,7 +90,7 @@ class Pulse:
         else:
             raise AttributeError('Pulse object must have `resonator_frequency` or `profile` defined in kwargs')
 
-        if self.freq_mod.__name__ == 'uniformq' or self.type == 'sech/tanh':
+        if self.fm_func.__name__ == 'uniformq' or self.type == 'sech/tanh':
             profile *= A0
 
         int = cumtrapz(profile ** -2, nu0, initial=0)
@@ -100,32 +101,27 @@ class Pulse:
         self.phase = 2 * np.pi * cumtrapz(self.frequency_modulation, self.time, initial=0)
         self.phase += np.abs(np.min(self.phase))
 
-        print(self.amplitude_modulation)
-
-        if self.freq_mod.__name__ == 'uniformq' or self.type == 'sech/tanh':
+        if self.fm_func.__name__ == 'uniformq' or self.type == 'sech/tanh':
             self.amplitude_modulation = pchip_interpolate(nu0, A0, nu_adapted)
-
-
 
     def _compute_flip_amp(self):
 
-        if self.freq_mod.__name__ == 'none':
-            self.amp = self.flip / (2 * np.pi * np.trapz(self.time, self.amplitude_modulation))
+        if self.fm_func.__name__ == 'none':
+            self.amp = self.flip / (2 * np.pi * np.trapz(self.amplitude_modulation, self.time))
 
         else:
             if self.Qcrit is None:
                 self.Qcrit = (2 / np.pi) * np.log(2 / (1 + np.cos(self.flip)))
                 self.Qcrit = np.minimum(self.Qcrit, 5)
 
-
             if not hasattr(self, 'profile'):
-                if self.freq_mod.__name__ == 'linear':
+                if self.fm_func.__name__ == 'linear':
                     sweeprate = np.abs(self.freq[1] - self.freq[0]) / self.pulse_time
 
-                elif self.freq_mod.__name__ == 'tanh':
+                elif self.fm_func.__name__ == 'tanh':
                     sweeprate = self.beta * np.abs(self.BWinf) / (2 * self.pulse_time)
 
-                elif self.freq_mod.__name__ == 'uniformq':
+                elif self.fm_func.__name__ == 'uniformq':
                     idx = np.argmin(np.abs(self.ti))
                     dnu = np.abs(np.diff(2 * np.pi * self.frequency_modulation / (self.time[1] - self.time[0])))
                     sweeprate = dnu[idx] / (2 * np.pi * (self.frequency_modulation[idx])**2)
@@ -136,7 +132,6 @@ class Pulse:
                 sweeprate = dnu[idx] / (2 * np.pi * (self.amplitude_modulation[idx])**2)
 
             self.amp = np.sqrt(2 * np.pi * self.Qcrit * sweeprate) / (2 * np.pi)
-            print(self.amp)
 
     def _compute_IQ(self):
         amplitude_modulation = self.amp * self.amplitude_modulation
