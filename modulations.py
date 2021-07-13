@@ -34,7 +34,10 @@ def gaussian(Pulse):
     :return:
     """
     if not hasattr(Pulse, 'tFWHM'):
-        raise AttributeError('Pulse object must have tFWHM defined in kwargs')
+        if not hasattr(Pulse, 'trunc'):
+            raise AttributeError('Pulse object must have wither `tFWHM` or `trunc` defined in kwargs')
+        else:
+            Pulse.tFWHM = np.sqrt(-(Pulse.pulse_time**2)/np.log2(Pulse.trunc))
 
     return np.exp(-(4 * np.log(2) * Pulse.ti ** 2) / Pulse.tFWHM ** 2)
 
