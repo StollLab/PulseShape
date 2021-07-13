@@ -1,4 +1,4 @@
-#PusleShape
+# PusleShape
 
 PulseShape is an EasySpin `pulse` function clone written in python. The major purpose for 
 rewriting pulse in Python is to free the function from the proprietary MATLAB universe and 
@@ -38,7 +38,8 @@ plt.ylabel('Amplitude')
 plt.legend()
 plt.show()
 ```
-![](img/sechtanh.png)
+<img src="img/sechtanh.png" width="400"  class="center"/>
+
 
 </td>
 <td>
@@ -58,13 +59,11 @@ delimiter = ' ';
 formatSpec = '%f%f%[^\n\r]';
 fileID = fopen(filename,'r');
 dataArray = textscan(fileID, formatSpec, 'Delimiter', ... 
-    delimiter, 'MultipleDelimsAsOne', true, 'TextType', 'string');
+                    delimiter, 'MultipleDelimsAsOne', ...
+                    true, 'TextType', 'string');
 fclose(fileID);
 
-xresponse = dataArray{:, 1};
-yresponse = dataArray{:, 2};
-
-Par.FrequencyResponse = [xresponse,yresponse];
+Par.FrequencyResponse = [dataArray{:, 1}, dataArray{:, 2}];
 
 [t, IQ] = pulse(Par)
 [t, IQ, modulation] = pulse(Par) 
@@ -82,7 +81,45 @@ height=448;
 set(gcf,'position',[x0,y0,width,height])
 
 ```
-![](img/sechtanhes.png)
+<img src="img/sechtanhes.png" width="400" class="center"/>
 </td>
 </tr>
 </table>
+
+## Example: Working with multiple pulses
+
+All `time`, `IQ`, other paramters and data are stored withing the `Pulse` object itself so it's easy to work with multiple pulses
+
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from PulseShape import Pulse
+
+    profile = np.loadtxt('data/Transferfunction.dat')
+    st_pulse = Pulse(pulse_time=0.150,
+                     time_step=0.000625,
+                     flip=np.pi,
+                     freq=[40, 120],
+                     type='sech/tanh',
+                     beta=10,
+                     profile=profile)
+
+    g_pulse = Pulse(pulse_time=0.06,
+                    time_step=0.000625,
+                    flip=np.pi,
+                    type='gaussian',
+                    trunc=0.1)
+
+    fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 10))
+    ax1.set_title('Amplitude Modulation')
+    ax1.plot(st_pulse.time * 1e3, st_pulse.amplitude_modulation, label='sech/tanh')
+    ax1.plot(g_pulse.time * 1e3, g_pulse.amplitude_modulation, label='gaussian')
+    ax1.set_ylabel('Amplitude (MHz)')
+    ax1.legend()
+
+    ax2.set_title('Frequency Modulation')
+    ax2.plot(st_pulse.time * 1e3, st_pulse.frequency_modulation)
+    ax2.plot(g_pulse.time * 1e3, g_pulse.frequency_modulation)
+    ax2.set_xlabel('Time (ns)')
+    ax2.set_ylabel('Frequency (MHz)')
+    plt.show()
