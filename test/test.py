@@ -24,3 +24,15 @@ def test_gaussian():
     ans = np.genfromtxt("data/gaussian.csv", delimiter=',', dtype=complex,
                         converters={0: lambda x: complex(x.decode('utf8').replace('i', 'j'))})
     np.testing.assert_almost_equal(myPulse.IQ, ans)
+
+
+def test_rectrangular():
+    pulse = Pulse(pulse_time=0.03,
+                  flip=np.pi,
+                  time_step=0.001)
+
+    Amp = (pulse.flip / pulse.pulse_time) / (2 * np.pi)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    IQ0 = np.ones(len(t0)) * Amp
+
+    np.testing.assert_almost_equal(pulse.IQ.real, IQ0)
