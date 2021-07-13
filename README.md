@@ -30,6 +30,7 @@ pulse = Pulse(pulse_time=0.150,
               beta=10, 
               profile=profile)
 
+plt.figure(figsize=(5, 5))
 plt.plot(pulse.time * 1000, pulse.IQ.real, label='real')
 plt.plot(pulse.time * 1000, pulse.IQ.imag, label='imaginary')
 plt.xlabel('time (ns)')
@@ -70,8 +71,16 @@ Par.FrequencyResponse = [xresponse,yresponse];
 
 figure(1)
 hold on
-plot(t, real(IQ)
-plot(t, imag(IQ)
+plot(t, real(IQ))
+plot(t, imag(IQ))
+xlabel('time ns')
+ylabel('Amplitude')
+x0=10;
+y0=10;
+width=465;
+height=448;
+set(gcf,'position',[x0,y0,width,height])
+
 ```
 ![](img/sechtanhes.png)
 </td>
