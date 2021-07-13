@@ -3,7 +3,7 @@ from PulseShape import Pulse
 
 
 def test_construct():
-    profile = np.loadtxt('data/Transferfunction.dat').T
+    profile = np.loadtxt('data/Transferfunction.dat')
     myPulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], type='sech/tanh', beta=10, profile=profile)
 
     ans = np.genfromtxt("data/sechtanh.csv", delimiter=',')

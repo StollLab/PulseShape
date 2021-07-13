@@ -45,6 +45,8 @@ class Pulse:
             raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
 
         self.__dict__.update(kwargs)
+        if hasattr(self, 'profile'):
+            self.profile = self.profile if len(self.profile) == 2 else self.profile.T
 
         self.time = np.arange(0, self.pulse_time + self.time_step, self.time_step)
         self.ti = self.time - self.pulse_time / 2
