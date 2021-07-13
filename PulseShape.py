@@ -85,7 +85,7 @@ class Pulse:
             profile = interp1d(f, H)(newaxis)
 
         elif hasattr(self, 'resonator_frequency'):
-            f0 = self.resonator_frequency ( 1e3)
+            f0 = self.resonator_frequency * 1e3
             QL = self.resonator_QL
             profile = np.abs(1 / (1 + 1j * QL * (newaxis / f0 - f0 / newaxis)))
 
@@ -136,8 +136,9 @@ class Pulse:
             self.amp = np.sqrt(2 * np.pi * self.Qcrit * sweeprate) / (2 * np.pi)
 
     def _compute_IQ(self):
-        amplitude_modulation = self.amp * self.amplitude_modulation
-        total_phase = self.phase + 2 * np.pi * np.mean(self.freq) * self.time + self.inp_phase
-        self.IQ = amplitude_modulation * np.exp(1j * total_phase)
+        self.amplitude_modulation = self.amp * self.amplitude_modulation
+        self.frequency_modulation += np.mean(self.freq)
+        self.phase = self.phase + 2 * np.pi * np.mean(self.freq) * self.time + self.inp_phase
+        self.IQ = self.amplitude_modulation * np.exp(1j * self.phase)
 
 
