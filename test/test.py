@@ -1,9 +1,12 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.stats import norm
 from PulseShape import Pulse
 
+sigma2fwhm = 2.35482004503
+fwhm2sigma = 1 / sigma2fwhm
 
-def test_construct():
+def test_bwcomp():
     profile = np.loadtxt('data/Transferfunction.dat')
     myPulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], type='sech/tanh', beta=10, profile=profile)
 
@@ -12,7 +15,7 @@ def test_construct():
     np.testing.assert_almost_equal(myPulse.IQ, ans)
 
 
-def test_gaussian():
+def test_gaussian_rd():
     profile = np.loadtxt('data/Transferfunction.dat').T
 
     myPulse = Pulse(pulse_time=0.060,
@@ -67,3 +70,35 @@ def test_sechtanh():
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
     np.testing.assert_almost_equal(phi, pulse.phase)
 
+def test_gaussian():
+    pulse = Pulse(pulse_time=0.200,
+                  type='gaussian',
+                  tFWHM=0.064,
+                  amp=((np.pi / 0.064)/(2 * np.pi)),
+                  freq=100,
+                  time_step=0.0001)
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A = norm(pulse.pulse_time / 2, pulse.tFWHM * fwhm2sigma).pdf(t0)
+    A = pulse.amp * (A / max(A))
+    f = np.cos(2 * np.pi * pulse.freq * t0) + 1j * np.sin(2 * np.pi * pulse.freq * t0)
+    IQ0 = A*f
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+def test_gaussian2():
+    dt = 0.001
+    t0 = np.arange(-0.300, 0.300 + dt, dt)
+    A = norm(0, 0.100 * fwhm2sigma).pdf(t0)
+    A = A / max(A)
+    ind = np.argwhere(np.rint(np.abs(A-0.5)*1e5) / 1e5 == 0).flatten()
+    t0 = t0[ind[0]:ind[1] + 1] - t0[ind[0]]
+    IQ0 = A[ind[0]:ind[1] + 1]
+
+    pulse = Pulse(pulse_time=np.round(t0[-1], 12),
+                  type='gaussian',
+                  trunc=0.5,
+                  time_step=dt,
+                  amp=1)
+
+    np.testing.assert_almost_equal(pulse.IQ.real, IQ0)
