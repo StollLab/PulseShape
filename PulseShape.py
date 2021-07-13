@@ -142,3 +142,12 @@ class Pulse:
         self.IQ = self.amplitude_modulation * np.exp(1j * self.phase)
 
 
+    def save_bruker(self, filename, shape_number=10):
+        if filename[-4:] != '.shp':
+            filename += '.shp'
+        fshort = filename.split('/')[-1]
+        with open(filename, 'w') as f:
+            f.write(f'begin shape{shape_number} "{fshort}"\n')
+            for C in self.IQ:
+                f.write(f'{C.real:1.5e},{C.imag:1.5e}\n')
+            f.write(f'end shape{shape_number}\n')
