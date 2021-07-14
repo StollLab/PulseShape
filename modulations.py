@@ -110,8 +110,8 @@ def sech(Pulse):
             amp = npsech(Pulse.beta, * 0.5 * (2 * Pulse.ti / Pulse.pulse_time) ** Pulse.n)
     elif len(Pulse.n) == 2:
         amp = np.empty_like(Pulse.ti)
-        amp[Pulse.ti < 0] = npsech(Pulse.beta, * 0.5 * (2 * Pulse.ti[Pulse.ti < 0] / Pulse.pulse_time) ** Pulse.n[0])
-        amp[Pulse.ti >= 0] = npsech(Pulse.beta, * 0.5 * (2 * Pulse.ti[Pulse.ti >= 0] / Pulse.pulse_time) ** Pulse.n[1])
+        amp[Pulse.ti < 0] = npsech(Pulse.beta * 0.5 * (2 * Pulse.ti[Pulse.ti < 0] / Pulse.pulse_time) ** Pulse.n[0])
+        amp[Pulse.ti >= 0] = npsech(Pulse.beta * 0.5 * (2 * Pulse.ti[Pulse.ti >= 0] / Pulse.pulse_time) ** Pulse.n[1])
     else:
         raise ValueError('sech `n` parameter must have at least one and no more than 2 elements')
 
