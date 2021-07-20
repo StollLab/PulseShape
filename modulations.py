@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.integrate import cumtrapz
 
+import PulseShape
+
 AmplitudeModulations = {}
 FrequencyModulations = {}
 
@@ -66,6 +68,10 @@ def sinc(Pulse):
     amp[np.isnan(amp)] = 1
     amp /= amp.max()
     return amp
+
+@am_func
+def halfsin(Pulse):
+    return np.cos(np.pi * Pulse.ti / Pulse.pulse_time)
 
 @am_func
 def quartersin(Pulse):
@@ -199,7 +205,7 @@ def linear(Pulse):
     if not hasattr(Pulse, 'freq'):
         raise AttributeError('Pulse object must have a `freq` parameter of length 2)')
 
-    k = (Pulse.freq[0] - Pulse.freq[1]) / Pulse.pulse_time
+    k = (Pulse.freq[1] - Pulse.freq[0]) / Pulse.pulse_time
     freq = k * Pulse.ti
     phase = 2 * np.pi * ((k /2) * Pulse.ti ** 2)
     return freq, phase
