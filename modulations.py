@@ -194,11 +194,11 @@ def linear(Pulse):
     :param Pulse:
     :return:
     """
-    for param in ['beta', 'freq']:
-        if not hasattr(Pulse, param):
-            raise AttributeError('Pulse object must have `beta` parameter and `freq` parameter (length 2)')
 
-    k = (Pulse.freq[1] - Pulse.freq[2]) / Pulse.pulse_time
+    if not hasattr(Pulse, 'freq'):
+        raise AttributeError('Pulse object must have a `freq` parameter of length 2)')
+
+    k = (Pulse.freq[0] - Pulse.freq[1]) / Pulse.pulse_time
     freq = k * Pulse.ti
     phase = 2 * np.pi * ((k /2) * Pulse.ti ** 2)
     return freq, phase
