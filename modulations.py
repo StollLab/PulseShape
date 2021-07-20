@@ -81,9 +81,10 @@ def quartersin(Pulse):
 
     amp = np.ones(len(Pulse.time))
     if Pulse.trise != 0 and 2 * Pulse.trise < Pulse.pulse_time:
-        tpartial = np.arange(0, Pulse.trise, Pulse.time_step + Pulse.trise)
-        amp[:len(tpartial)] = np.sin(tpartial * (np.pi / 2 * Pulse.trise))
-        amp[-len(tpartial):] = amp[:len(tpartial):-1]
+        tpartial = np.arange(0, Pulse.time_step + Pulse.trise, Pulse.time_step)
+        npts = len(tpartial)
+        amp[:npts] = np.sin(tpartial * (np.pi / (2 * Pulse.trise)))
+        amp[-npts:] = amp[npts-1::-1]
 
     return amp
 
