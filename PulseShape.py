@@ -3,12 +3,15 @@ from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from modulations import AmplitudeModulations, FrequencyModulations
 
+def nextpow2(x):
+    return 1 if x == 0 else int(np.ceil(np.log2(x)))
+
 class Pulse:
     """
     A pulse object contains everything that needs to be known about a pulse.
     """
 
-    def __init__(self, pulse_time, time_step, flip=np.pi, mwFreq=33.80,
+    def __init__(self, pulse_time, time_step=None, flip=np.pi, mwFreq=33.80,
                  amp=None, Qcrit=None, freq=0, phase=0, type='rectangular', **kwargs):
         """
 
@@ -22,19 +25,8 @@ class Pulse:
         :param type:
         :param kwargs:
         """
-        self.pulse_time = pulse_time
-        self.time_step = time_step
-        self.flip = flip
-        if self.flip > np.pi:
-            raise ValueError("flip angle should be less than or equal to pi")
-        self.amp = amp
-        self.Qcrit = Qcrit
-        self.freq = freq
-        self.inp_phase = phase
-        self.type = type
-        self.n = kwargs.get('n', 1)
-        self.mwFreq = mwFreq
 
+        self.inp_kwargs = kwargs.copy()
         ntype = len(type.split('/'))
         if ntype == 2:
             am, fm = type.split('/')
@@ -43,6 +35,24 @@ class Pulse:
             self.am_func, self.fm_func = AmplitudeModulations[type], FrequencyModulations['none']
         else:
             raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
+
+        self.flip = flip
+        if self.flip > np.pi:
+            raise ValueError("flip angle should be less than or equal to pi")
+        self.amp = amp
+        self.Qcrit = Qcrit
+
+        self.inp_phase = phase
+        self.type = type
+        self.n = kwargs.get('n', 1)
+        self.mwFreq = mwFreq
+        self.freq = freq
+        self.pulse_time = pulse_time
+
+        self.time_step = time_step
+        if self.time_step is None:
+            self.oversample_factor = kwargs.get('oversample_factor', 10)
+            self.estimate_timestep()
 
         self.__dict__.update(kwargs)
         if hasattr(self, 'profile'):
@@ -140,6 +150,42 @@ class Pulse:
         self.frequency_modulation += np.mean(self.freq)
         self.phase = self.phase + 2 * np.pi * np.mean(self.freq) * self.time + self.inp_phase
         self.IQ = self.amplitude_modulation * np.exp(1j * self.phase)
+
+    def estimate_timestep(self):
+        if self.fm_func.__name__ == 'none':
+            FM_BW = 0
+        else:
+            FM_BW = np.abs(self.freq[1] -self.freq[0])
+
+        dt = 1e-4
+        tpulse = Pulse(time_step=dt, pulse_time=self.pulse_time, flip=self.flip,
+                       mwFreq=self.mwFreq, amp=self.amp, Qcrit=self.Qcrit, freq=self.freq,
+                       phase=self.inp_phase, type=self.type, **self.inp_kwargs)
+
+        if nextpow2(len(tpulse.time)) < 10:
+            zf = 2 ** 10
+        else:
+            zf = 4 * 2 ** nextpow2(len(tpulse.time))
+
+        A0fft = np.abs(np.fft.fftshift(np.fft.rfft(tpulse.amplitude_modulation, zf)))
+        f = np.fft.rfftfreq(zf, dt)
+        intg = cumtrapz(A0fft, initial=0)
+        idx = np.argmin(np.abs(intg - 0.5 * np.max(intg)))
+        indbw = np.argwhere(A0fft[idx:] > 0.1 * max(A0fft))
+        AM_BW = 2 * (f[idx + indbw[-1]] - f[idx])
+        BW = max(FM_BW, AM_BW)
+
+        maxFreq = max(abs(np.mean(self.freq) + np.array([-1, 1]) * BW / 2))
+        if maxFreq != 0:
+            nyquist_dt = 1 / (2 * maxFreq)
+            self.time_step = nyquist_dt / self.oversample_factor
+        else:
+            self.time_step = 0.002
+
+        if self.time_step > self.pulse_time:
+            self.time_step = self.pulse_time
+
+        self.time_step = self.pulse_time / np.rint(self.pulse_time / self.time_step)
 
 
     def save_bruker(self, filename, shape_number=10):
