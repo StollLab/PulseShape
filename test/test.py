@@ -36,7 +36,7 @@ def test_linear_chirp():
 
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
 
-    BW = pulse.freq[0] - pulse.freq[1]
+    BW = pulse.freq[1] - pulse.freq[0]
     Amp = np.sqrt(4 * np.log(2) * BW / pulse.pulse_time) / (2 * np.pi)
     f = -(BW / 2) + (BW / pulse.pulse_time) * t0
 

@@ -1,10 +1,12 @@
 import numpy as np
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
-from modulations import AmplitudeModulations, FrequencyModulations
+from .modulations import AmplitudeModulations, FrequencyModulations
+
 
 def nextpow2(x):
     return 1 if x == 0 else int(np.ceil(np.log2(x)))
+
 
 class Pulse:
     """
