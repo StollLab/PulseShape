@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
+from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from PulseShape import Pulse
 
@@ -15,6 +16,63 @@ def test_bwcomp():
     ans = ans[:, 0] + 1j * ans[:, 1]
     np.testing.assert_almost_equal(pulse.IQ, ans)
 
+def test_bwcomp2():
+    pulse = Pulse(pulse_time=0.128,
+                  time_step=0.00001,
+                  flip=np.pi,
+                  freq=[-150, 150],
+                  mwFreq=9.5,
+                  amp=1,
+                  type='quartersin/linear',
+                  trise=0.030,
+                  oversample_factor=10)
+
+    pulse2 = Pulse(pulse_time=0.128,
+                   time_step=0.00001,
+                   flip=np.pi,
+                   freq=[-150, 150],
+                   mwFreq=9.5,
+                   resonator_frequency=9.5,
+                   resonator_ql=50,
+                   amp=1,
+                   type='quartersin/linear',
+                   trise=0.030,
+                   oversample_factor=10)
+
+
+    f0 = np.arange(9, 10 + 1e-5, 1e-5)
+    H = 1/(1 + 1j * pulse2.resonator_ql * (f0 / pulse2.resonator_frequency - pulse2.resonator_frequency / f0))
+    v1 = np.abs(H)
+
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A = np.ones_like(t0)
+    t_part = np.arange(0, pulse.trise + pulse.time_step, pulse.time_step)
+    A[:len(t_part)] = np.sin((t_part) * (np.pi / (2 * pulse.trise)))
+    A[-len(t_part):] = A[len(t_part) - 1::-1]
+
+    BW = pulse.freq[1] - pulse.freq[0]
+    f = -(BW/2) + (BW/pulse.pulse_time) * t0
+
+    phi = 2 * np.pi * cumtrapz(f, t0, initial=0)
+    phi += np.abs(np.min(phi))
+
+    v1_range = interp1d(f0 * 10**3, v1, fill_value=0, bounds_error=False)(f + pulse.mwFreq * 10**3)
+
+    const = np.trapz(1/v1_range**2) / t0[-1]
+    t_f = cumtrapz((1 / const) * (1 / v1_range**2), initial=0)
+
+    f_adapted = pchip_interpolate(t_f, f + pulse.mwFreq * 10**3, t0)
+    f_adapted -= pulse.mwFreq * 10 ** 3
+    phi_adapted = 2 * np.pi * cumtrapz(f_adapted, t0, initial=0)
+    phi_adapted += np.abs(np.min(phi_adapted))
+
+    IQ0 = A * np.exp(1j * phi)
+    IQ0_adapted = A * np.exp(1j * phi_adapted)
+
+    np.testing.assert_almost_equal(IQ0, pulse.IQ)
+    np.testing.assert_almost_equal(IQ0_adapted, pulse2.IQ)
+    
 
 def test_estimate_timestep():
     pulse = Pulse(pulse_time=0.128,
