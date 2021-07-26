@@ -125,7 +125,7 @@ def sech(Pulse):
     return amp
 
 @am_func
-def wurst(Pulse):
+def WURST(Pulse):
     """
     wurst pulse shape requires `nwusrt` parameter
 
@@ -135,7 +135,9 @@ def wurst(Pulse):
     if not hasattr(Pulse, 'nwurst'):
         raise AttributeError('Pulse object must have nwurst defined in kwargs')
 
-    amp = 1 - np.abs(np.sin(np.pi, * Pulse.ti/Pulse.pulse_time))**Pulse.nwurst
+    amp = 1 - np.abs(np.sin(np.pi * Pulse.ti/Pulse.pulse_time))**Pulse.nwurst
+    return amp
+
 
 @am_func
 def gaussiancascade(Pulse):

@@ -308,6 +308,30 @@ def test_gaussian2():
 
     np.testing.assert_almost_equal(pulse.IQ.real, IQ0)
 
+def test_WURST():
+    pulse = Pulse(pulse_time=0.500,
+                  type='WURST/linear',
+                  freq=[-150, 350],
+                  amp=15,
+                  nwurst=15)
+
+    A = 1 - np.abs((np.sin((np.pi * (pulse.time - pulse.pulse_time / 2)) / pulse.pulse_time)) ** pulse.nwurst)
+    BW = np.diff(pulse.freq)[0]
+    f = -(BW / 2) + (BW / pulse.pulse_time) * pulse.time
+    phi = cumtrapz(f, pulse.time - pulse.pulse_time/2, initial=0)
+    phi += np.abs(min(phi)) + np.mean(pulse.freq) * pulse.time
+
+    IQ0 = pulse.amp * A * np.exp(2j * np.pi * phi)
+
+    plt.plot(IQ0.real)
+    plt.show()
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+    np.testing.assert_almost_equal(pulse.amplitude_modulation, pulse.amp * A)
+    np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
+    np.testing.assert_almost_equal(pulse.phase, 2 * np.pi * phi)
+
+
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
 
