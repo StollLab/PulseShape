@@ -10,7 +10,14 @@ fwhm2sigma = 1 / sigma2fwhm
 
 def test_bwcomp():
     profile = np.loadtxt('data/Transferfunction.dat')
-    pulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], type='sech/tanh', beta=10, profile=profile)
+    pulse = Pulse(pulse_time=0.150,
+                  time_step=0.000625,
+                  flip=np.pi,
+                  freq=[40, 120],
+                  type='sech/tanh',
+                  beta=10,
+                  profile=profile,
+                  mwFreq=33.80)
 
     ans = np.genfromtxt("data/sechtanh.csv", delimiter=',')
     ans = ans[:, 0] + 1j * ans[:, 1]
@@ -72,7 +79,58 @@ def test_bwcomp2():
 
     np.testing.assert_almost_equal(IQ0, pulse.IQ)
     np.testing.assert_almost_equal(IQ0_adapted, pulse2.IQ)
-    
+
+def test_bwcomp3():
+    pulse = Pulse(pulse_time=0.200,
+                  time_step=0.00001,
+                  type='sech/tanh',
+                  beta=10,
+                  freq=[-100, 100],
+                  amp=1)
+
+    QL = 60
+    f0 = np.arange(9.2, 9.5 + 1e-2, 1e-2)
+    dipfreq=9.35
+    v1 = np.abs(1 / (1 + 1j * QL * (f0 / dipfreq - dipfreq / f0)))
+
+    pulse2 = Pulse(pulse_time=0.200,
+                   time_step=0.00001,
+                   type='sech/tanh',
+                   beta=10,
+                   freq=[-100, 100],
+                   amp=1,
+                   mwFreq=9.34,
+                   profile=[f0, v1])
+
+    f = np.fft.fftshift(np.fft.fftfreq(len(pulse.time), np.diff(pulse.time).mean()))
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A = (1 / np.cosh(pulse.beta * ((t0 - pulse.pulse_time / 2) / pulse.pulse_time)))
+    BWinf = (pulse.freq[1] - pulse.freq[0]) / np.tanh(pulse.beta / 2)
+
+    f = (BWinf / 2) * np.tanh((pulse.beta / pulse.pulse_time) * (t0 - pulse.pulse_time / 2))
+    phi = (BWinf / 2) * (pulse.pulse_time / pulse.beta) * \
+          np.log(np.cosh((pulse.beta / pulse.pulse_time) * (t0 - pulse.pulse_time / 2)))
+    phi = 2 * np.pi * phi
+
+    v1_range = interp1d(f0 * 10**3, v1)(f + pulse2.mwFreq * 10 ** 3)
+    v1_range = A * v1_range
+
+    const = np.trapz(1. / v1_range ** 2 / t0[-1], f)
+    t_f = cumtrapz((1 / const) * (1. / v1_range ** 2), f, initial=0)
+
+    f_adapted = pchip_interpolate(t_f, f + pulse2.mwFreq * 10 ** 3, t0)
+    f_adapted = f_adapted - pulse2.mwFreq * 10 ** 3
+    phi_adapted = 2 * np.pi * cumtrapz(f_adapted, t0, initial=0)
+
+    phi_adapted = phi_adapted + abs(min(phi_adapted))
+    A_adapted = pchip_interpolate(f, A, f_adapted)
+
+    IQ0 = A * np.exp(1j * phi)
+    IQ0_adapted = A_adapted * np.exp(1j * phi_adapted)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+    np.testing.assert_almost_equal(pulse2.IQ, IQ0_adapted)
 
 def test_estimate_timestep():
     pulse = Pulse(pulse_time=0.128,

@@ -64,7 +64,7 @@ class Pulse:
         self.ti = self.time - self.pulse_time / 2
 
         self._shape()
-        if hasattr(self, 'profile') and self.fm_func.__name__ != 'none':
+        if (hasattr(self, 'profile') and self.fm_func.__name__ != 'none') or hasattr(self, 'resonator_frequency'):
             self.bw_comp()
 
         if self.amp is None:
@@ -98,7 +98,7 @@ class Pulse:
 
         elif hasattr(self, 'resonator_frequency'):
             f0 = self.resonator_frequency * 1e3
-            QL = self.resonator_QL
+            QL = self.resonator_ql
             profile = np.abs(1 / (1 + 1j * QL * (newaxis / f0 - f0 / newaxis)))
 
         else:
