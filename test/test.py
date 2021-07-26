@@ -331,6 +331,31 @@ def test_WURST():
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
     np.testing.assert_almost_equal(pulse.phase, 2 * np.pi * phi)
 
+def test_higherordersech():
+    pulse = Pulse(pulse_time=0.600,
+                  time_step=0.0005,
+                  type='sech/uniformq',
+                  freq=[-100, 100],
+                  beta=10.6,
+                  n=8,
+                  amp=20)
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    ti = t0 - pulse.pulse_time/2
+    A = 1 / np.cosh((pulse.beta) * (2 ** (pulse.n - 1)) * (ti / pulse.pulse_time) ** pulse.n)
+    A = pulse.amp * A
+    f = cumtrapz(A ** 2 / np.trapz(A ** 2, ti), ti, initial=0)
+    BW = np.diff(pulse.freq)[0]
+    f = BW * f - BW / 2
+
+    phi = cumtrapz(f, ti, initial=0)
+    phi = phi + abs(min(phi))
+    IQ0 = A * np.exp(2j * np.pi * phi)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+    np.testing.assert_almost_equal(pulse.amplitude_modulation, A)
+    np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
+    np.testing.assert_almost_equal(pulse.phase, 2 * np.pi * phi)
 
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T

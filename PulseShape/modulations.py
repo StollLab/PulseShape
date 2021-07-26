@@ -114,7 +114,7 @@ def sech(Pulse):
         if Pulse.n == 1:
             amp = npsech(Pulse.beta * Pulse.ti / Pulse.pulse_time)
         else:
-            amp = npsech(Pulse.beta, * 0.5 * (2 * Pulse.ti / Pulse.pulse_time) ** Pulse.n)
+            amp = npsech(Pulse.beta * 0.5 * (2 * Pulse.ti / Pulse.pulse_time) ** Pulse.n)
     elif len(Pulse.n) == 2:
         amp = np.empty_like(Pulse.ti)
         amp[Pulse.ti < 0] = npsech(Pulse.beta * 0.5 * (2 * Pulse.ti[Pulse.ti < 0] / Pulse.pulse_time) ** Pulse.n[0])
