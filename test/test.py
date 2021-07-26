@@ -357,6 +357,25 @@ def test_higherordersech():
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
     np.testing.assert_almost_equal(pulse.phase, 2 * np.pi * phi)
 
+def test_flip_am():
+    pulse1 = {'pulse_time':0.060, 'type': 'rectangular'}
+    pulse2 = {'pulse_time':0.200, 'tFWHM':0.060, 'type':'gaussian'}
+    pulse3 = {'pulse_time':0.200, 'zerocross':0.050, 'type':'sinc'}
+    pulse4 = {'pulse_time':0.100, 'trise':0.020, 'type':'quartersin'}
+    pulse5 = {'pulse_time':0.500, 'beta':12, 'type':'sech'}
+    pulse6 = {'pulse_time':0.300, 'nwurst':20, 'type':'WURST'}
+
+    offsets = 0
+    tol = 1e-12
+    for pulse in [pulse1, pulse2, pulse3, pulse4, pulse5, pulse6]:
+        p1 = Pulse(flip=np.pi/2, offsets=offsets, **pulse)
+        p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
+
+
+        assert np.all(p1.Mag[2] < tol)
+        assert np.all(p2.Mag[2] > -1 - tol)
+        assert np.all(p2.Mag[2] < -1 + tol)
+
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
 

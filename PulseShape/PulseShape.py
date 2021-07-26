@@ -161,8 +161,8 @@ class Pulse:
             FM_BW = np.abs(self.freq[1] -self.freq[0])
 
         dt = 1e-4
-        tpulse = Pulse(time_step=dt, pulse_time=self.pulse_time, flip=self.flip,
-                       mwFreq=self.mwFreq, amp=self.amp, Qcrit=self.Qcrit, freq=self.freq,
+        tpulse = Pulse(time_step=dt, pulse_time=self.pulse_time, flip=self.flip, amp=1,
+                       mwFreq=self.mwFreq, Qcrit=self.Qcrit, freq=self.freq,
                        phase=self.inp_phase, type=self.type, **self.inp_kwargs)
 
         if nextpow2(len(tpulse.time)) < 10:
@@ -170,11 +170,11 @@ class Pulse:
         else:
             zf = 4 * 2 ** nextpow2(len(tpulse.time))
 
-        A0fft = np.abs(np.fft.fftshift(np.fft.rfft(tpulse.amplitude_modulation, zf)))
-        f = np.fft.rfftfreq(zf, dt)
+        A0fft = np.abs(np.fft.fftshift(np.fft.fft(tpulse.amplitude_modulation, zf)))
+        f = np.fft.fftshift(np.fft.fftfreq(zf, dt))
         intg = cumtrapz(A0fft, initial=0)
         idx = np.argmin(np.abs(intg - 0.5 * np.max(intg)))
-        indbw = np.argwhere(A0fft[idx:] > 0.1 * max(A0fft))
+        indbw = np.squeeze(np.argwhere(A0fft[idx:] > 0.1 * max(A0fft)))
         AM_BW = 2 * (f[idx + indbw[-1]] - f[idx])
         BW = max(FM_BW, AM_BW)
 
@@ -219,6 +219,7 @@ class Pulse:
             center_freq = np.mean([f[indbw[-1]], f[indbw[0]]])
             self.offsets = np.squeeze(np.linspace(-bw, bw, self.nOffsets) + center_freq)
 
+        self.offsets = np.atleast_1d(self.offsets)
         npoints = len(self.time)
         noffsets = len(self.offsets)
         Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
