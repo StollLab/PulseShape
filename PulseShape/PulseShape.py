@@ -2,6 +2,7 @@ import numpy as np
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from .modulations import AmplitudeModulations, FrequencyModulations
+from .utils import sop
 
 
 def nextpow2(x):
@@ -71,7 +72,7 @@ class Pulse:
             self._compute_flip_amp()
 
         self._compute_IQ()
-
+        self._exciteprofile()
 
     def _shape(self):
         self.amplitude_modulation = self.am_func(self)
@@ -189,7 +190,6 @@ class Pulse:
 
         self.time_step = self.pulse_time / np.rint(self.pulse_time / self.time_step)
 
-
     def save_bruker(self, filename, shape_number=10):
         if filename[-4:] != '.shp':
             filename += '.shp'
@@ -199,3 +199,72 @@ class Pulse:
             for C in self.IQ:
                 f.write(f'{C.real:1.5e},{C.imag:1.5e}\n')
             f.write(f'end shape{shape_number}\n')
+
+    def _exciteprofile(self):
+
+        if not hasattr(self, 'nOffsets'):
+            self.nOffsets = 201
+
+
+        if not hasattr(self, 'offsets'):
+            if nextpow2(len(self.time)) < 10:
+                zf = 2 ** 10
+            else:
+                zf = 4 * 2 **nextpow2(len(self.time))
+
+            IQft = np.abs(np.fft.fftshift(np.fft.fft(self.IQ, zf)))
+            f = np.fft.fftfreq(zf, self.time_step)
+            indbw = np.argwhere(IQft > 0.5 * max(IQft))
+            bw = abs(f[indbw[-1]] - f[indbw[0]])
+            center_freq = np.mean([f[indbw[-1]], f[indbw[0]]])
+            self.offsets = np.squeeze(np.linspace(-bw, bw, self.nOffsets) + center_freq)
+
+        npoints = len(self.time)
+        noffsets = len(self.offsets)
+        Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
+
+        Density0 = -Sz
+
+        Mag = np.zeros((3, noffsets))
+
+        for iOs, offset in enumerate(self.offsets):
+
+            Ham0 = offset * Sz
+
+            if min(self.IQ) == max(self.IQ):
+
+                Ham = self.IQ.real[0] * Sx + self.IQ.imag[0] * Sy + Ham0
+                tp = (self.time[1] - self.time[0]) * (npoints - 1)
+                M = -2j * np.pi * tp * Ham
+
+                q = np.sqrt(M[0, 0] ** 2 - abs(M[0, 1]) ** 2)
+                if abs(q) < 1e-10:
+                    UPulse = np.eye(2) + M
+                else:
+                    UPulse = np.cosh(q) * np.eye(2) + (np.sinh(q) / q) * M
+
+            else:
+                eye2 = np.eye(2)
+                UPulse = eye2
+
+                for it in range(0, npoints-1):
+                    Ham = self.IQ.real[it] * Sx + self.IQ.imag[it] * Sy + Ham0
+                    M = -2j * np.pi * (self.time[1]-self.time[0]) * Ham
+                    q = np.sqrt(M[0, 0] ** 2 - abs(M[0, 1]) ** 2)
+
+                    if abs(q) < 1e-10:
+                        dU = eye2 + M
+                    else:
+                        dU = np.cosh(q) * eye2 + (np.sinh(q) / q) * M
+
+                    UPulse = dU * UPulse
+
+            density = UPulse @ Density0 @ UPulse.H
+
+            Mag[0, iOs] = -2 * (Sx * density.T).sum().real
+            Mag[1, iOs] = -2 * (Sy * density.T).sum().real
+            Mag[2, iOs] = -2 * (Sz * density.T).sum().real
+
+        self.Mag = Mag
+
+
