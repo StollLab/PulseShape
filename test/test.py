@@ -34,6 +34,8 @@ def test_bwcomp2():
                   trise=0.030,
                   oversample_factor=10)
 
+    pulse.exciteprofile()
+
     pulse2 = Pulse(pulse_time=0.128,
                    time_step=0.00001,
                    flip=np.pi,
@@ -369,8 +371,9 @@ def test_flip_am():
     tol = 1e-12
     for pulse in [pulse1, pulse2, pulse3, pulse4, pulse5, pulse6]:
         p1 = Pulse(flip=np.pi/2, offsets=offsets, **pulse)
+        p1.exciteprofile()
         p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
-
+        p2.exciteprofile()
 
         assert np.all(p1.Mag[2] < tol)
         assert np.all(p2.Mag[2] > -1 - tol)
