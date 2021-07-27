@@ -4,6 +4,7 @@ setup(
     name='PulseShape',
     version='0.1.0',
     packages=['PulseShape'],
+    install_requires=['numpy', 'scipy', 'numba'],
     url='',
     license='',
     author='Maxx Tessmer',
