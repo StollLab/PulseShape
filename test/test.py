@@ -33,9 +33,7 @@ def test_bwcomp2():
                   type='quartersin/linear',
                   trise=0.030,
                   oversample_factor=10)
-
-    pulse.exciteprofile()
-
+    
     pulse2 = Pulse(pulse_time=0.128,
                    time_step=0.00001,
                    flip=np.pi,
