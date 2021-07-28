@@ -372,6 +372,37 @@ def test_sinc():
     IQ0 = A
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
+def test_asymmetric_sech():
+    pulse = Pulse(pulse_time=0.100,
+                  time_step=5e-4,
+                  type='sech/uniformq',
+                  freq=[-100, 100],
+                  beta=10.4,
+                  n=[6, 1],
+                  amp=30)
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    npts = len(t0)
+    ti = t0 - pulse.pulse_time / 2
+    A = np.ones(len(t0))
+    A[:int(np.rint(npts/2)) - 1] = 1 / np.cosh((pulse.beta) * (2**(pulse.n[0] - 1)) *
+                                          (ti[:int(np.rint(npts/2)) - 1]/pulse.pulse_time) ** pulse.n[0])
+    A[int(np.rint(npts / 2)):] = 1 / np.cosh((pulse.beta) * (2 ** (pulse.n[1] - 1)) *
+                                        (ti[int(np.rint(npts / 2)):] / pulse.pulse_time) ** pulse.n[1])
+
+    A = A * pulse.amp
+    f = cumtrapz(A**2 / np.trapz(A**2, ti), ti, initial=0)
+    BW = pulse.freq[1] - pulse.freq[0]
+    f = BW * f - BW/2
+    phi = cumtrapz(f, ti, initial=0)
+    phi += abs(min(phi))
+    IQ0 = A * np.exp(2j * np.pi * phi)
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+    np.testing.assert_almost_equal(pulse.amplitude_modulation, A)
+    np.testing.assert_almost_equal(pulse.frequency_modulation, f)
+    np.testing.assert_almost_equal(2 * np.pi * phi, pulse.phase)
+
+
 def test_flip_am():
     pulse1 = {'pulse_time':0.060, 'type': 'rectangular'}
     pulse2 = {'pulse_time':0.200, 'tFWHM':0.060, 'type':'gaussian'}
