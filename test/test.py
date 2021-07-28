@@ -33,7 +33,7 @@ def test_bwcomp2():
                   type='quartersin/linear',
                   trise=0.030,
                   oversample_factor=10)
-    
+
     pulse2 = Pulse(pulse_time=0.128,
                    time_step=0.00001,
                    flip=np.pi,
@@ -356,6 +356,21 @@ def test_higherordersech():
     np.testing.assert_almost_equal(pulse.amplitude_modulation, A)
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
     np.testing.assert_almost_equal(pulse.phase, 2 * np.pi * phi)
+
+def test_sinc():
+    pulse = Pulse(pulse_time=0.200,
+                  type='sinc',
+                  zerocross=0.034,
+                  time_step=0.001,
+                  amp=1)
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    ti = t0 - pulse.pulse_time/2
+    x = 2 * np.pi * ti / pulse.zerocross
+    A = np.sin(x) / x
+    A[ti == 0] = 1
+    IQ0 = A
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
 def test_flip_am():
     pulse1 = {'pulse_time':0.060, 'type': 'rectangular'}
