@@ -3,6 +3,10 @@ from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from .modulations import AmplitudeModulations, FrequencyModulations
 from .utils import sop, calc_mag
+# TODO: implement product of amplitude functions
+# TODO: implement gaussian_cascade and fourier_series am_funcs
+# TODO: implement user_defined IQ
+
 
 
 def nextpow2(x):
@@ -18,11 +22,16 @@ class Pulse:
                  amp=None, Qcrit=None, freq=0, phase=0, type='rectangular', **kwargs):
         """
 
-        :param pulse_time:
-        :param time_step:
-        :param flip:
-        :param amp:
+        :param pulse_time: float
+            length of pulse in us
+        :param time_step: float
+            time increment in us
+        :param flip: float
+            pulse flip angle
+        :param amp: float
+            pulse maximum amplitude
         :param Qcrit:
+            
         :param freq:
         :param phase:
         :param type:
@@ -190,12 +199,19 @@ class Pulse:
         self.time_step = self.pulse_time / np.rint(self.pulse_time / self.time_step)
 
     def save_bruker(self, filename, shape_number=10):
+        
+        # Ensure file has correct prefix
         if filename[-4:] != '.shp':
             filename += '.shp'
+
+        # Normalize IQ
+        IQ = self.IQ / self.IQ.max()
+
+        # Write file
         fshort = filename.split('/')[-1]
         with open(filename, 'w') as f:
             f.write(f'begin shape{shape_number} "{fshort}"\n')
-            for C in self.IQ:
+            for C in IQ:
                 f.write(f'{C.real:1.5e},{C.imag:1.5e}\n')
             f.write(f'end shape{shape_number}\n')
 
