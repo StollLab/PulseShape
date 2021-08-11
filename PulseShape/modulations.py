@@ -166,25 +166,53 @@ def fourier_series(Pulse):
     :return:
     """
 
-    for param in ['An', 'Bn', 'FWHM']:
+    for param in ['An', 'Bn', 'A0']:
         if not hasattr(Pulse, param):
-            raise AttributeError('Pulse object must have `An`, `Bn`, and `FWHM` defined in kwargs')
+            raise AttributeError('Pulse object must have `An`, `Bn`, and `A0` defined in kwargs')
 
     amp = np.zeros(len(Pulse.time)) + Pulse.A0
-    for j, (an, bn) in enumerate(zip(Pulse.An, Pulse.Bn)):
+    for i, (an, bn) in enumerate(zip(Pulse.An, Pulse.Bn)):
+        j = i + 1
         amp += an * np.cos(j * 2 * np.pi * Pulse.time / Pulse.pulse_time) + \
                bn * np.sin(j * 2 * np.pi * Pulse.time / Pulse.pulse_time)
 
     amp /= max(amp)
     return amp
 
+@am_func
+def I_BURP1(Pulse):
+    Pulse.A0 = 0.5
+    Pulse.An = [0.70, - 0.15, - 0.94, 0.11, -0.02, -0.04, 0.01, -0.02, -0.01]
+    Pulse.Bn = [-1.54, 1.01, - 0.24, -0.04, 0.08, -0.04, -0.01, 0.01, -0.01]
+    return fourier_series(Pulse)
+
+@am_func
+def I_BURP2(Pulse):
+    Pulse.A0 = 0.5
+    Pulse.An = [0.81, 0.07, -1.25, -0.24, 0.07, 0.11, 0.05, -0.02, -0.03, -0.02, 0.00]
+    Pulse.Bn = [-0.68, -1.38, 0.20, 0.45, 0.23, 0.05, -0.04, -0.04, 0.00, 0.01, 0.01]
+    return fourier_series(Pulse)
+
+@am_func
+def SNOB_i2(Pulse):
+    Pulse.A0 = 0.5
+    Pulse.An = [-0.2687, -0.2972, 0.0989, -0.0010, -0.0168, 0.0009, -0.0017, -0.0013, -0.0014]
+    Pulse.Bn = [-1.1461, 0.4016, 0.0736, -0.0307, 0.0079, 0.0062, 0.0003, -0.0002, 0.0009]
+    return fourier_series(Pulse)
+
+@am_func
+def SNOB_i3(Pulse):
+    Pulse.A0 = 0.5
+    Pulse.An = [0.2801, -0.9995, 0.1928, 0.0967, -0.0480, -0.0148, 0.0088, -0.0002, -0.0030]
+    Pulse.Bn = [-1.1990, 0.4893, 0.2439, -0.0816, -0.0409, 0.0234, 0.0036, -0.0042, 0.0001]
+    return fourier_series(Pulse)
 
 @am_func
 def G3(Pulse):
     Pulse.x0 = [0.287, 0.508, 0.795]
     Pulse.A0 = [-1, 1.37, 0.49]
     Pulse.FWHM = [0.189, 0.183, 0.243]
-    return gaussiancascade(Pulse)
+    return gaussian_cascade(Pulse)
 
 
 @am_func
@@ -192,7 +220,7 @@ def G4(Pulse):
     Pulse.x0 = [0.177, 0.492, 0.653, 0.892]
     Pulse.A0 = [0.62, 0.72, -0.91, -0.33]
     Pulse.FWHM = [0.172, 0.129, 0.119, 0.139]
-    return gaussiancascade(Pulse)
+    return gaussian_cascade(Pulse)
 
 
 @am_func
@@ -200,7 +228,7 @@ def Q3(Pulse):
     Pulse.x0 = [0.306, 0.545, 0.804]
     Pulse.A0 = [-4.39, 4.57, 2.60]
     Pulse.FWHM = [0.180, 0.183, 0.245]
-    return gaussiancascade(Pulse)
+    return gaussian_cascade(Pulse)
 
 
 @am_func
@@ -208,7 +236,7 @@ def Q5(Pulse):
     Pulse.x0 = [0.162, 0.307, 0.497, 0.525, 0.803]
     Pulse.A0 = [-1.48, -4.34, 7.33, -2.30, 5.66]
     Pulse.FWHM = [0.186, 0.139, 0.143, 0.290, 0.137]
-    return gaussiancascade(Pulse)
+    return gaussian_cascade(Pulse)
 
 
 # Freq Mods

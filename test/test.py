@@ -535,6 +535,103 @@ def test_gaussian_cascade():
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
+
+def test_I_BURP1():
+    pulse = Pulse(pulse_time=0.500, type='I_BURP1', time_step=0.001, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A0 = 0.5
+    An = [0.70, - 0.15, - 0.94, 0.11, -0.02, -0.04, 0.01, -0.02, -0.01]
+    Bn = [-1.54, 1.01, - 0.24, -0.04, 0.08, -0.04, -0.01, 0.01, -0.01]
+
+    A = np.zeros_like(t0) + A0
+    for i, (an, bn) in enumerate(zip(An, Bn)):
+        j = i+1
+        A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
+             bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
+
+    A /= max([-min(A), max(A)])
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+def test_I_BURP2():
+    pulse = Pulse(pulse_time=0.700, type='I_BURP2', time_step=0.001, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A0 = 0.5
+    An = [0.81, 0.07, -1.25, -0.24, 0.07, 0.11, 0.05, -0.02, -0.03, -0.02, 0.00]
+    Bn = [-0.68, -1.38, 0.20, 0.45, 0.23, 0.05, -0.04, -0.04, 0.00, 0.01, 0.01]
+
+    A = np.zeros_like(t0) + A0
+    for i, (an, bn) in enumerate(zip(An, Bn)):
+        j = i+1
+        A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
+             bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
+
+    A /= max([-min(A), max(A)])
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+
+def test_SNOB_i2():
+    pulse = Pulse(pulse_time=0.200, type='SNOB_i2', time_step=0.001, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A0 = 0.5
+    An = [-0.2687, -0.2972, 0.0989, -0.0010, -0.0168, 0.0009, -0.0017, -0.0013, -0.0014]
+    Bn = [-1.1461, 0.4016, 0.0736, -0.0307, 0.0079, 0.0062, 0.0003, -0.0002, 0.0009]
+
+    A = np.zeros_like(t0) + A0
+    for i, (an, bn) in enumerate(zip(An, Bn)):
+        j = i+1
+        A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
+             bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
+
+    A /= max([-min(A), max(A)])
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+
+def test_SNOB_i3():
+    pulse = Pulse(pulse_time=0.200, type='SNOB_i3', time_step=0.001, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A0 = 0.5
+    An = [0.2801, -0.9995, 0.1928, 0.0967, -0.0480, -0.0148, 0.0088, -0.0002, -0.0030]
+    Bn = [-1.1990, 0.4893, 0.2439, -0.0816, -0.0409, 0.0234, 0.0036, -0.0042, 0.0001]
+
+    A = np.zeros_like(t0) + A0
+    for i, (an, bn) in enumerate(zip(An, Bn)):
+        j = i+1
+        A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
+             bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
+
+    A /= max([-min(A), max(A)])
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+def test_fourier_series():
+    pulse = Pulse(pulse_time=2.00,
+                  type='fourier_series',
+                  time_step=0.001,
+                  amp=1,
+                  A0=0.308,
+                  An=[1.017, -0.480, -1.033, 0.078, 0.103, 0.109,  0.027, -0.043, -0.018, 0.000, 0.005,  0.004],
+                  Bn=[-0.384, -1.894, 0.574, 0.409, 0.098, 0.009, -0.079, -0.024,  0.014, 0.010, 0.003, -0.001])
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    A = np.zeros_like(t0) + pulse.A0
+    for i, (an, bn) in enumerate(zip(pulse.An, pulse.Bn)):
+        j = i+1
+        A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
+             bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
+
+    A /= max([-min(A), max(A)])
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
 
