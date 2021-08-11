@@ -138,7 +138,7 @@ def WURST(Pulse):
 
 
 @am_func
-def gaussiancascade(Pulse):
+def gaussian_cascade(Pulse):
     """
     gaussian cascade requires `A0`, `x0`, and `FWHM` parameters.
 
@@ -159,7 +159,7 @@ def gaussiancascade(Pulse):
 
 
 @am_func
-def fourierseries(Pulse):
+def fourier_series(Pulse):
     """
     fourierseries requires `An`, `Bn`, and `FWHM` parameters.
     :param Pulse:

@@ -511,6 +511,29 @@ def test_Q5():
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
+def test_gaussian_cascade():
+
+    pulse = Pulse(type='gaussian_cascade',
+                  pulse_time=1.200,
+                  time_step=0.01,
+                  amp=1,
+                  A0=[-0.84, 1.53, -2.12, 5.21],
+                  x0=[0.154, 0.358, 0.521, 0.766],
+                  FWHM=[0.180, 0.183, 0.195, 0.235])
+
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+
+    A0 = np.array([-0.84, 1.53, -2.12, 5.21])
+    x0 = np.array([0.154, 0.358, 0.521, 0.766]) * pulse.pulse_time
+    FWHM = np.array([0.180, 0.183, 0.195, 0.235]) * pulse.pulse_time
+
+    A = np.zeros_like(t0)
+    for An, xn, Fn in zip(A0, x0, FWHM):
+        A += An * np.exp(-(4 * np.log(2) / Fn ** 2) * (t0 - xn) ** 2)
+
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
