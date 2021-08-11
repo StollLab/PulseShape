@@ -4,7 +4,7 @@ PulseShape is an EasySpin `pulse` function clone written in python. The major pu
 rewriting pulse in Python is to free the function from the proprietary MATLAB universe and 
 make it easier to use on linux systems that often ship with e580 spectrometers. 
 
-The PulseShape is built around the `Pulse` object which accepts arguments similar to those 
+PulseShape is built around the `Pulse` object which accepts arguments similar to those 
 used by the easyspin `pulse` function. 
 
 ## Example: sech\tanh pulse with resonator compensation
