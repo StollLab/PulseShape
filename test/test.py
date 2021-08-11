@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
-from PulseShape import Pulse
+from PulseShape import Pulse, sop
 import pytest
 
 sigma2fwhm = 2.35482004503
@@ -417,9 +417,9 @@ def test_flip_am(pulse):
     p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
     p2.exciteprofile()
 
-    assert np.all(p1.Mag[2] < tol)
-    assert np.all(p2.Mag[2] > -1 - tol)
-    assert np.all(p2.Mag[2] < -1 + tol)
+    assert np.all(p1.Mz < tol)
+    assert np.all(p2.Mz > -1 - tol)
+    assert np.all(p2.Mz < -1 + tol)
 
 
 pulses2 = [{'type': 'quartersin/linear', 'pulse_time': 0.200, 'trise': 0.050, 'freq': [-250, 250]},
@@ -438,9 +438,10 @@ def test_flip_amfm(pulse):
     p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
     p2.exciteprofile()
 
-    assert p1.Mag[2] < tol
-    assert p2.Mag[2] > -1 - tol
-    assert p2.Mag[2] < -1 + tol
+    print(p1.Mz)
+    assert p1.Mz < tol
+    assert p2.Mz > -1 - tol
+    assert p2.Mz < -1 + tol
 
 
 def test_G3():
@@ -648,6 +649,81 @@ def test_userIQ():
 
     pulse2 = Pulse(pulse_time=0.200, I=IQ0.real, Q=IQ0.imag, time_step=pulse.time_step)
     np.testing.assert_almost_equal(pulse2.IQ, pulse.IQ)
+
+def test_exciteprofile1():
+    p1 = Pulse(flip=np.pi/2, pulse_time=0.016, phase=np.pi/2)
+    p2 = Pulse(flip=np.pi, pulse_time=0.032, phase=np.pi/2)
+    offsets = np.arange(-70, 70.5, 0.5)
+    p1.exciteprofile(offsets)
+    p2.exciteprofile(offsets)
+
+    for p in [p1, p2]:
+        Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
+        Amplitude = (p.flip / p.pulse_time) / (2 * np.pi)
+
+        H = np.einsum('i,jk->ijk', offsets, Sz) + (Amplitude * Sy)[None, :]
+        M = -2j * np.pi * H * p.pulse_time
+        q = np.sqrt(M[:, 0, 0]**2 - np.abs(M[:, 0, 1])**2)
+        coshterm = np.einsum('i,jk->ijk', np.cosh(q), np.eye(2))
+
+        U = coshterm + (np.sinh(q) / q)[:, None, None] * M
+        rho = np.einsum('ijk,kl->ijl', U, -Sz)
+        rho = np.einsum('ijk,ikl->ijl', rho, U.conj().transpose(0, 2, 1))
+
+        Mx = -2 * np.trace(np.einsum('ij,ljk->lik', Sx, rho), axis1=1, axis2=2)
+        My = -2 * np.trace(np.einsum('ij,ljk->lik', Sy, rho), axis1=1, axis2=2)
+        Mz = -2 * np.trace(np.einsum('ij,ljk->lik', Sz, rho), axis1=1, axis2=2)
+
+        np.testing.assert_almost_equal(Mx, p.Mx)
+        np.testing.assert_almost_equal(My, p.My)
+        np.testing.assert_almost_equal(Mz, p.Mz)
+
+from time import time
+def test_exciteprofile2():
+    p1 = Pulse(type='sinc', flip=np.pi, pulse_time=0.2, zerocross=0.05)
+
+    offsets = np.arange(-100, 101)
+    p1.exciteprofile(offsets)
+    Mz = np.loadtxt('data/Mz.csv', delimiter=',')
+
+    np.testing.assert_almost_equal(Mz, p1.Mz)
+
+def test_exciteprofile3():
+    p1 = Pulse(type='sech/tanh', flip=np.pi, pulse_time=0.2, time_step=5e-4, freq=[110, 10], beta=15)
+
+    p1.exciteprofile()
+    Mz = np.loadtxt('data/Mz2.csv', delimiter=',')
+
+    np.testing.assert_almost_equal(Mz, p1.Mz, decimal=3)
+
+def test_excite_userIQ():
+    dt = 1e-3
+    tp = 8e-3
+    v1 = ((np.pi/2)/tp)/(2*np.pi)
+    I = np.ones(int(6 * tp / dt) + 1)
+    I[int(tp/dt):int(3*tp/dt)] *= -1
+    pulse = Pulse(pulse_time=6*tp, I=v1*I)
+    pulse.exciteprofile()
+
+    Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
+
+    H = np.einsum('i,jk->ijk', pulse.offsets, Sz) + (v1 * Sz)[None, :]
+    M = -2j * np.pi * H * pulse.pulse_time
+    q = np.sqrt(M[:, 0, 0] ** 2 - np.abs(M[:, 0, 1]) ** 2)
+    coshterm = np.einsum('i,jk->ijk', np.cosh(q), np.eye(2))
+
+    U = coshterm + (np.sinh(q) / q)[:, None, None] * M
+    rho = np.einsum('ijk,kl->ijl', U, -Sz)
+    rho = np.einsum('ijk,ikl->ijl', rho, U.conj().transpose(0, 2, 1))
+
+    Mx = -2 * np.trace(np.einsum('ij,ljk->lik', Sx, rho), axis1=1, axis2=2)
+    My = -2 * np.trace(np.einsum('ij,ljk->lik', Sy, rho), axis1=1, axis2=2)
+    Mz = -2 * np.trace(np.einsum('ij,ljk->lik', Sz, rho), axis1=1, axis2=2)
+
+    np.testing.assert_almost_equal(Mx, pulse.Mx)
+    np.testing.assert_almost_equal(My, pulse.My)
+    np.testing.assert_almost_equal(Mz, pulse.Mz)
+
 
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
