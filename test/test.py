@@ -4,6 +4,7 @@ from scipy.stats import norm
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from PulseShape import Pulse
+import pytest
 
 sigma2fwhm = 2.35482004503
 fwhm2sigma = 1 / sigma2fwhm
@@ -403,25 +404,46 @@ def test_asymmetric_sech():
     np.testing.assert_almost_equal(2 * np.pi * phi, pulse.phase)
 
 
-def test_flip_am():
-    pulse1 = {'pulse_time':0.060, 'type': 'rectangular'}
-    pulse2 = {'pulse_time':0.200, 'tFWHM':0.060, 'type':'gaussian'}
-    pulse3 = {'pulse_time':0.200, 'zerocross':0.050, 'type':'sinc'}
-    pulse4 = {'pulse_time':0.100, 'trise':0.020, 'type':'quartersin'}
-    pulse5 = {'pulse_time':0.500, 'beta':12, 'type':'sech'}
-    pulse6 = {'pulse_time':0.300, 'nwurst':20, 'type':'WURST'}
-
+pulses1 = [{'pulse_time':0.060, 'type': 'rectangular'},
+           {'pulse_time':0.200, 'tFWHM':0.060, 'type':'gaussian'},
+           {'pulse_time':0.200, 'zerocross':0.050, 'type':'sinc'},
+           {'pulse_time':0.100, 'trise':0.020, 'type':'quartersin'},
+           {'pulse_time':0.500, 'beta':12, 'type':'sech'},
+           {'pulse_time':0.300, 'nwurst':20, 'type':'WURST'}]
+@pytest.mark.parametrize('pulse', pulses1)
+def test_flip_am(pulse):
     offsets = 0
     tol = 1e-12
-    for pulse in [pulse1, pulse2, pulse3, pulse4, pulse5, pulse6]:
-        p1 = Pulse(flip=np.pi/2, offsets=offsets, **pulse)
-        p1.exciteprofile()
-        p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
-        p2.exciteprofile()
 
-        assert np.all(p1.Mag[2] < tol)
-        assert np.all(p2.Mag[2] > -1 - tol)
-        assert np.all(p2.Mag[2] < -1 + tol)
+    p1 = Pulse(flip=np.pi/2, offsets=offsets, **pulse)
+    p1.exciteprofile()
+    p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
+    p2.exciteprofile()
+
+    assert np.all(p1.Mag[2] < tol)
+    assert np.all(p2.Mag[2] > -1 - tol)
+    assert np.all(p2.Mag[2] < -1 + tol)
+
+
+pulses2 = [{'type': 'quartersin/linear', 'pulse_time': 0.200, 'trise': 0.050, 'freq': [-250, 250]},
+           {'type': 'WURST/linear', 'pulse_time': 0.200, 'nwurst':30, 'freq': [150, -150]},
+           {'type': 'sech/tanh', 'pulse_time': 0.400, 'beta':10, 'freq': [-35, 35]},
+           {'type': 'sech*WURST/tanh', 'pulse_time': 0.500, 'beta': 4, 'nwurst': 8, 'freq': [60, -60]},
+           {'type': 'sech/uniformq', 'pulse_time': 0.300, 'beta': 10, 'n': 4, 'freq': [-100, 100]},
+           {'type': 'sech/uniformq', 'pulse_time': 0.400, 'beta': 7, 'n': 12, 'freq': [-125, 125]}]
+@pytest.mark.parametrize('pulse', pulses2)
+def test_flip_amfm(pulse):
+    offsets = 0
+    tol = 1e-2
+
+    p1 = Pulse(flip=np.pi/2, offsets=offsets, **pulse)
+    p1.exciteprofile()
+    p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
+    p2.exciteprofile()
+
+    assert p1.Mag[2] < tol
+    assert p2.Mag[2] > -1 - tol
+    assert p2.Mag[2] < -1 + tol
 
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T

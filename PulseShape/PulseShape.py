@@ -10,6 +10,7 @@ from .utils import sop, calc_mag
 
 
 def nextpow2(x):
+    """Clone of MATLAB's nextpow function"""
     return 1 if x == 0 else int(np.ceil(np.log2(x)))
 
 
@@ -21,39 +22,58 @@ class Pulse:
     def __init__(self, pulse_time, time_step=None, flip=np.pi, mwFreq=33.80,
                  amp=None, Qcrit=None, freq=0, phase=0, type='rectangular', **kwargs):
         """
-
         :param pulse_time: float
-            length of pulse in us
+            Length of pulse in us
         :param time_step: float
-            time increment in us
+            Time increment in us
         :param flip: float
-            pulse flip angle
+            Pulse flip angle
         :param amp: float
-            pulse maximum amplitude
-        :param Qcrit:
-            
-        :param freq:
-        :param phase:
-        :param type:
-        :param kwargs:
+            Pulse maximum amplitude
+        :param Qcrit: float
+            Critcal adiabtacity
+        :param freq: float np.ndarray-lile
+            Pulse frequency offset/bandwidth.
+        :param phase: float
+            Pulse Phase in radians.
+        :param type: str
+            amplitude/frequency modulation
         """
 
+        # Copy input args in case needed
         self.inp_kwargs = kwargs.copy()
+
+        # Separate FM and AM shapes
         ntype = len(type.split('/'))
+
+        # Assign modulation functions
         if ntype == 2:
             am, fm = type.split('/')
-            self.am_func, self.fm_func = AmplitudeModulations[am], FrequencyModulations[fm]
+            if len(am.split('*')) == 1:
+                self.am_func, self.fm_func = AmplitudeModulations[am], FrequencyModulations[fm]
+            else:
+                ams = am.split('*')
+                def t_func(Pulse):
+                    return np.prod([AmplitudeModulations[am](Pulse) for am in ams], axis=0)
+
+                self.am_func = t_func
+                self.fm_func = FrequencyModulations[fm]
+
         elif ntype == 1:
             self.am_func, self.fm_func = AmplitudeModulations[type], FrequencyModulations['none']
         else:
             raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
 
+        # Ensure flip angle is between 0 and pi radians
         self.flip = flip
         if self.flip > np.pi:
             raise ValueError("flip angle should be less than or equal to pi")
+
+        # Assign amplitude related variabels
         self.amp = amp
         self.Qcrit = Qcrit
 
+        # Assign misc variables
         self.inp_phase = phase
         self.type = type
         self.n = kwargs.get('n', 1)
@@ -61,32 +81,49 @@ class Pulse:
         self.freq = freq
         self.pulse_time = pulse_time
 
+        # Assign or calculate time step
         self.time_step = time_step
         if self.time_step is None:
             self.oversample_factor = kwargs.get('oversample_factor', 10)
             self.estimate_timestep()
 
+        # Assign any remain variables passed by kwargs
         self.__dict__.update(kwargs)
+
+        # If resonator profile is passed, make sure it is a 2xn array
         if hasattr(self, 'profile'):
             self.profile = self.profile if len(self.profile) == 2 else self.profile.T
 
+        # Calculate time domain
         self.time = np.arange(0, self.pulse_time + self.time_step, self.time_step)
         self.ti = self.time - self.pulse_time / 2
 
+        # Claculate shape
         self._shape()
+
+        # Perform resonator compensation if profile is provided
         if (hasattr(self, 'profile') and self.fm_func.__name__ != 'none') or hasattr(self, 'resonator_frequency'):
             self.bw_comp()
 
+        # Compute amplitude if it is no provided
         if self.amp is None:
             self._compute_flip_amp()
 
+        # Compute IQ
         self._compute_IQ()
 
     def _shape(self):
+        """
+        Calculate shape of amplitude and frequency modulations
+        """
         self.amplitude_modulation = self.am_func(self)
         self.frequency_modulation, self.phase = self.fm_func(self)
 
     def bw_comp(self):
+        """
+        Calculate resonator profile compensation and apply to pulse shape
+        """
+
         nu0 = self.frequency_modulation.copy()
         A0 = self.amplitude_modulation.copy()
         newaxis = nu0 + np.mean(self.freq) + self.mwFreq * 1e3
@@ -147,7 +184,7 @@ class Pulse:
                 elif self.fm_func.__name__ == 'uniformq':
                     idx = np.argmin(np.abs(self.ti))
                     dnu = np.abs(np.diff(2 * np.pi * self.frequency_modulation / (self.time[1] - self.time[0])))
-                    sweeprate = dnu[idx] / (2 * np.pi * (self.frequency_modulation[idx])**2)
+                    sweeprate = dnu[idx] / (2 * np.pi * (self.amplitude_modulation[idx])**2)
 
             else:
                 idx = np.argmin(np.abs(self.ti))

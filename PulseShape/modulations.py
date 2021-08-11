@@ -1,8 +1,6 @@
 import numpy as np
 from scipy.integrate import cumtrapz
 
-import PulseShape
-
 AmplitudeModulations = {}
 FrequencyModulations = {}
 
@@ -159,6 +157,7 @@ def gaussiancascade(Pulse):
     amp /= max(amp)
     return amp
 
+
 @am_func
 def fourierseries(Pulse):
     """
@@ -180,8 +179,39 @@ def fourierseries(Pulse):
     return amp
 
 
-# Freq Mods
+@am_func
+def G3(Pulse):
+    Pulse.x0 = [0.287, 0.508, 0.795]
+    Pulse.A0 = [-1, 1.37, 0.49]
+    Pulse.FWHM = [0.189, 0.183, 0.243]
+    return gaussiancascade(Pulse)
 
+
+@am_func
+def G4(Pulse):
+    Pulse.x0 = [0.177, 0.492, 0.653, 0.892]
+    Pulse.A0 = [0.62, 0.72, -0.91, -0.33]
+    Pulse.FWHM = [0.172, 0.129, 0.119, 0.139]
+    return gaussiancascade(Pulse)
+
+
+@am_func
+def Q3(Pulse):
+    Pulse.x0 = [0.306, 0.545, 0.804]
+    Pulse.A0 = [-4.39, 4.57, 2.60]
+    Pulse.FWHM = [0.180, 0.183, 0.245]
+    return gaussiancascade(Pulse)
+
+
+@am_func
+def Q5(Pulse):
+    Pulse.x0 = [0.162, 0.307, 0.497, 0.525, 0.803]
+    Pulse.A0 = [-1.48, -4.34, 7.33, -2.30, 5.66]
+    Pulse.FWHM = [0.186, 0.139, 0.143, 0.290, 0.137]
+    return gaussiancascade(Pulse)
+
+
+# Freq Mods
 @fm_func
 def none(Pulse):
     """
@@ -240,7 +270,7 @@ def uniformq(Pulse):
     :return:
     """
 
-    freq = cumtrapz(Pulse.amplitude_modulation**2 / np.trapz(Pulse.amplitude_modulation**2, Pulse.ti, ), Pulse.ti, initial=0)
+    freq = cumtrapz(Pulse.amplitude_modulation**2, Pulse.ti, initial=0) / np.trapz(Pulse.amplitude_modulation**2, Pulse.ti, )
     freq = (Pulse.freq[1] - Pulse.freq[0]) * (freq - 1/2)
     phase = 2 * np.pi * cumtrapz(freq, Pulse.ti, initial=0)
     phase += np.abs(min(phase))
