@@ -46,7 +46,7 @@ def sop(spins, comps):
     else:
         return [Op.todense() for Op in Ops]
 
-@njit
+@njit(cache=True)
 def calc_mag(offsets, IQ, Sx, Sy, Sz, npoints, time, eye2, Density0):
     Mag = np.zeros((3, len(offsets)))
 
