@@ -151,9 +151,9 @@ def gaussiancascade(Pulse):
 
     Pulse.A0, Pulse.x0, Pulse.FWHM = np.atleast_1d(Pulse.A0), np.atleast_1d(Pulse.x0), np.atleast_1d(Pulse.FWHM)
 
-    amp = np.zeros(len(Pulse.t))
+    amp = np.zeros(len(Pulse.time))
     for a0, x, fwhm in zip(Pulse.A0, Pulse.x0, Pulse.FWHM):
-        amp += a0 * np.exp(-(4 * np.log(2) / (fwhm * Pulse.pulse_time) ^ 2) * (Pulse.time - x * Pulse.pulse_time)**2)
+        amp += a0 * np.exp(-(4 * np.log(2) / (fwhm * Pulse.pulse_time) ** 2) * (Pulse.time - x * Pulse.pulse_time)**2)
     amp /= max(amp)
     return amp
 

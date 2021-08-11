@@ -445,6 +445,73 @@ def test_flip_amfm(pulse):
     assert p2.Mag[2] > -1 - tol
     assert p2.Mag[2] < -1 + tol
 
+
+def test_G3():
+    pulse = Pulse(type='G3', pulse_time=0.800, time_step=0.001, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+
+    A0 = np.array([-1, 1.37, 0.49])
+    x0 = np.array([0.287, 0.508, 0.795]) * pulse.pulse_time
+    FWHM = np.array([0.189, 0.183, 0.243]) * pulse.pulse_time
+
+    A = np.zeros_like(t0)
+    for An, xn, Fn in zip(A0, x0, FWHM):
+        A += An * np.exp(-(4 * np.log(2) / Fn**2) * (t0 - xn) ** 2)
+
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+def test_G4():
+    pulse = Pulse(type='G4', pulse_time=0.800, time_step=0.001, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+
+    A0 = np.array([0.62, 0.72, -0.91, -0.33])
+    x0 = np.array([0.177, 0.492, 0.653, 0.892]) * pulse.pulse_time
+    FWHM = np.array([0.172, 0.129, 0.119, 0.139]) * pulse.pulse_time
+
+    A = np.zeros_like(t0)
+    for An, xn, Fn in zip(A0, x0, FWHM):
+        A += An * np.exp(-(4 * np.log(2) / Fn**2) * (t0 - xn) ** 2)
+
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+def test_Q3():
+    pulse = Pulse(type='Q3', pulse_time=1.200, time_step=0.01, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+
+    A0 = np.array([-4.39, 4.57, 2.60])
+    x0 = np.array([0.306, 0.545, 0.804]) * pulse.pulse_time
+    FWHM = np.array([0.180, 0.183, 0.245]) * pulse.pulse_time
+
+    A = np.zeros_like(t0)
+    for An, xn, Fn in zip(A0, x0, FWHM):
+        A += An * np.exp(-(4 * np.log(2) / Fn**2) * (t0 - xn) ** 2)
+
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+
+def test_Q5():
+    pulse = Pulse(type='Q5', pulse_time=1.200, time_step=0.01, amp=1)
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+
+    A0 = np.array([-1.48, -4.34, 7.33, -2.30, 5.66])
+    x0 = np.array([0.162, 0.307, 0.497, 0.525, 0.803]) * pulse.pulse_time
+    FWHM = np.array([0.186, 0.139, 0.143, 0.290, 0.137]) * pulse.pulse_time
+
+    A = np.zeros_like(t0)
+    for An, xn, Fn in zip(A0, x0, FWHM):
+        A += An * np.exp(-(4 * np.log(2) / Fn ** 2) * (t0 - xn) ** 2)
+
+    IQ0 = A / max(A)
+
+    np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
+
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
 
