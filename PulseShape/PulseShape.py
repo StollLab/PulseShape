@@ -61,6 +61,8 @@ class Pulse:
 
         elif ntype == 1:
             self.am_func, self.fm_func = AmplitudeModulations[type], FrequencyModulations['none']
+        elif ntype == 0 and any(x in kwargs for x in ['I', 'Q', 'IQ']):
+            pass
         else:
             raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
 
@@ -110,14 +112,42 @@ class Pulse:
             self._compute_flip_amp()
 
         # Compute IQ
-        self._compute_IQ()
+        if not hasattr(self, 'IQ'):
+            self._compute_IQ()
 
     def _shape(self):
         """
         Calculate shape of amplitude and frequency modulations
         """
-        self.amplitude_modulation = self.am_func(self)
-        self.frequency_modulation, self.phase = self.fm_func(self)
+        if any(x in self.__dict__ for x in ['I', 'Q', 'IQ']):
+            lenIQ = [len(self.__dict__[X]) for X in ['I', 'Q'] if X in self.__dict__][0]
+            IQ = self.__dict__.get('IQ', None)
+            if IQ is None:
+                Q = self.__dict__.get('Q', np.zeros(lenIQ))
+                I = self.__dict__.get('I', np.zeros(lenIQ))
+                IQ = I + 1j * Q
+
+            self.time = np.linspace(0, self.pulse_time, len(IQ))
+            if hasattr(self, 'time_step'):
+                new_time = np.arange(0, self.pulse_time + self.time_step, self.time_step)
+                new_IQ = interp1d(self.time, IQ)(new_time)
+                self.time = new_time
+                self.IQ = new_IQ
+            else:
+                self.time_step = np.mean(np.diff(self.time))
+
+            if self.amp is not None:
+                self.IQ = self.amp * self.IQ
+            else:
+                self.amp = np.max(self.IQ)
+
+            self.amplitude_modulation = []
+            self.frequency_modulation = []
+            self.phase = []
+            
+        else:
+            self.amplitude_modulation = self.am_func(self)
+            self.frequency_modulation, self.phase = self.fm_func(self)
 
     def bw_comp(self):
         """

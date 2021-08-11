@@ -324,9 +324,6 @@ def test_WURST():
 
     IQ0 = pulse.amp * A * np.exp(2j * np.pi * phi)
 
-    plt.plot(IQ0.real)
-    plt.show()
-
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
     np.testing.assert_almost_equal(pulse.amplitude_modulation, pulse.amp * A)
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
@@ -631,6 +628,26 @@ def test_fourier_series():
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
+def test_userIQ():
+    pulse = Pulse(type='sech/tanh', pulse_time=0.200, freq=[120, 0], beta=10.6, Qcrit=5, time_step=5e-4)
+
+    dt = 0.0001
+    t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
+    BW = (pulse.freq[1] - pulse.freq[0]) / np.tanh(pulse.beta / 2)
+    Amplitude = np.sqrt((pulse.beta * abs(BW) * pulse.Qcrit) / (2 * np.pi * 2 * pulse.pulse_time))
+    A = 1 / (np.cosh((pulse.beta / pulse.pulse_time) * (t0 - pulse.pulse_time / 2)))
+
+    f = ((pulse.freq[1] - pulse.freq[0]) / (2 * np.tanh(pulse.beta / 2))) * \
+        np.tanh((pulse.beta / pulse.pulse_time) * (t0 - pulse.pulse_time / 2))
+
+    phi = ((pulse.freq[1] - pulse.freq[0]) / (2 * np.tanh(pulse.beta / 2))) * (pulse.pulse_time / pulse.beta) \
+          * np.log(np.cosh((pulse.beta / pulse.pulse_time) * (t0 - pulse.pulse_time / 2)))
+
+    phi = 2 * np.pi * (phi + np.mean(pulse.freq) * t0)
+    IQ0 = Amplitude * A * np.exp(1j * phi)
+
+    pulse2 = Pulse(pulse_time=0.200, I=IQ0.real, Q=IQ0.imag, time_step=pulse.time_step)
+    np.testing.assert_almost_equal(pulse2.IQ, pulse.IQ)
 
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
