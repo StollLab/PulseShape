@@ -42,9 +42,9 @@ def sop(spins, comps):
             Ops.append(Op)
 
     if len(Ops) == 1:
-        return Ops[0].todense()
+        return np.array(Ops[0].todense())
     else:
-        return [Op.todense() for Op in Ops]
+        return [np.array(Op.todense()) for Op in Ops]
 
 @njit(cache=True)
 def calc_mag(offsets, IQ, Sx, Sy, Sz, npoints, time, eye2, Density0):
