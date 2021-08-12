@@ -401,12 +401,12 @@ def test_asymmetric_sech():
     np.testing.assert_almost_equal(2 * np.pi * phi, pulse.phase)
 
 
-pulses1 = [{'pulse_time':0.060, 'type': 'rectangular'},
-           {'pulse_time':0.200, 'tFWHM':0.060, 'type':'gaussian'},
-           {'pulse_time':0.200, 'zerocross':0.050, 'type':'sinc'},
-           {'pulse_time':0.100, 'trise':0.020, 'type':'quartersin'},
-           {'pulse_time':0.500, 'beta':12, 'type':'sech'},
-           {'pulse_time':0.300, 'nwurst':20, 'type':'WURST'}]
+pulses1 = [{'pulse_time': 0.060, 'type': 'rectangular'},
+           {'pulse_time': 0.200, 'tFWHM': 0.060, 'type': 'gaussian'},
+           {'pulse_time': 0.200, 'zerocross': 0.050, 'type': 'sinc'},
+           {'pulse_time': 0.100, 'trise': 0.020, 'type': 'quartersin'},
+           {'pulse_time': 0.500, 'beta': 12, 'type': 'sech'},
+           {'pulse_time': 0.300, 'nwurst': 20, 'type': 'WURST'}]
 @pytest.mark.parametrize('pulse', pulses1)
 def test_flip_am(pulse):
     offsets = 0
@@ -416,9 +416,10 @@ def test_flip_am(pulse):
     p1.exciteprofile()
     p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
     p2.exciteprofile()
-
+    print(p1.Mz)
     assert np.all(p1.Mz < tol)
     assert np.all(p2.Mz > -1 - tol)
+    print(p2.Mz - (-1 + tol))
     assert np.all(p2.Mz < -1 + tol)
 
 
@@ -707,21 +708,29 @@ def test_excite_userIQ():
 
     Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
 
-    H = np.einsum('i,jk->ijk', pulse.offsets, Sz) + (v1 * Sz)[None, :]
-    M = -2j * np.pi * H * pulse.pulse_time
-    q = np.sqrt(M[:, 0, 0] ** 2 - np.abs(M[:, 0, 1]) ** 2)
-    coshterm = np.einsum('i,jk->ijk', np.cosh(q), np.eye(2))
+    H1 = np.einsum('i,jk->ijk', pulse.offsets, Sz) + (v1 * Sx)[None, :]
+    M1 = -2j * np.pi * tp * H1
+    q1 = np.sqrt(M1[:, 0, 0] ** 2 - np.abs(M1[:, 0, 1]) ** 2)
+    U1 = np.einsum('i,jk->ijk', np.cosh(q1), np.eye(2)) + (np.sinh(q1) / q1)[:, None, None] * M1
 
-    U = coshterm + (np.sinh(q) / q)[:, None, None] * M
+    H2 = np.einsum('i,jk->ijk', pulse.offsets, Sz) - (v1 * Sx)[None, :]
+    M2 = -2j * np.pi * tp * 2 * H2
+    q2 = np.sqrt(M2[:, 0, 0] ** 2 - np.abs(M2[:, 0, 1]) ** 2)
+    U2 = np.einsum('i,jk->ijk', np.cosh(q2), np.eye(2)) + (np.sinh(q2) / q2)[:, None, None] * M2
+
+    H3 = np.einsum('i,jk->ijk', pulse.offsets, Sz) + (v1 * Sx)[None, :]
+    M3 = -2j * np.pi * tp * 3 * H3
+    q3 = np.sqrt(M3[:, 0, 0] ** 2 - np.abs(M3[:, 0, 1]) ** 2)
+    U3 = np.einsum('i,jk->ijk', np.cosh(q3), np.eye(2)) + (np.sinh(q3) / q3)[:, None, None] * M3
+
+    U = np.einsum('ijk,ikl->ijl', U1, U2)
+    U = np.einsum('ijk,ikl->ijl', U, U3)
+
     rho = np.einsum('ijk,kl->ijl', U, -Sz)
     rho = np.einsum('ijk,ikl->ijl', rho, U.conj().transpose(0, 2, 1))
 
-    Mx = -2 * np.trace(np.einsum('ij,ljk->lik', Sx, rho), axis1=1, axis2=2)
-    My = -2 * np.trace(np.einsum('ij,ljk->lik', Sy, rho), axis1=1, axis2=2)
     Mz = -2 * np.trace(np.einsum('ij,ljk->lik', Sz, rho), axis1=1, axis2=2)
 
-    np.testing.assert_almost_equal(Mx, pulse.Mx)
-    np.testing.assert_almost_equal(My, pulse.My)
     np.testing.assert_almost_equal(Mz, pulse.Mz)
 
 

@@ -13,6 +13,7 @@ def nextpow2(x):
     """Clone of MATLAB's nextpow function"""
     return 1 if x == 0 else int(np.ceil(np.log2(x)))
 
+eps = np.finfo(float).eps
 
 class Pulse:
     """
@@ -38,6 +39,8 @@ class Pulse:
             Pulse Phase in radians.
         :param type: str
             amplitude/frequency modulation
+        :param kwargs: dict
+            Additional keyword arguments for specific pulse shapes
         """
 
         # Copy input args in case needed
@@ -46,25 +49,26 @@ class Pulse:
         # Separate FM and AM shapes
         ntype = len(type.split('/'))
 
-        # Assign modulation functions
-        if ntype == 2:
-            am, fm = type.split('/')
-            if len(am.split('*')) == 1:
-                self.am_func, self.fm_func = AmplitudeModulations[am], FrequencyModulations[fm]
+        # Check if user supplied IQ
+        userIQ = True if any(x in kwargs for x in ['I', 'Q', 'IQ']) else False
+
+        # if not, get the mod functions from dictionaries
+        if not userIQ:
+            if ntype == 2:
+                am, fm = type.split('/')
+                if len(am.split('*')) == 1:
+                    self.am_func, self.fm_func = AmplitudeModulations[am], FrequencyModulations[fm]
+                else:
+                    ams = am.split('*')
+                    def t_func(Pulse):
+                        return np.prod([AmplitudeModulations[am](Pulse) for am in ams], axis=0)
+                    self.am_func = t_func
+                    self.fm_func = FrequencyModulations[fm]
+            # If only one type passed assume it is an am_func
+            elif ntype == 1:
+                self.am_func, self.fm_func = AmplitudeModulations[type], FrequencyModulations['none']
             else:
-                ams = am.split('*')
-                def t_func(Pulse):
-                    return np.prod([AmplitudeModulations[am](Pulse) for am in ams], axis=0)
-
-                self.am_func = t_func
-                self.fm_func = FrequencyModulations[fm]
-
-        elif ntype == 1:
-            self.am_func, self.fm_func = AmplitudeModulations[type], FrequencyModulations['none']
-        elif ntype == 0 and any(x in kwargs for x in ['I', 'Q', 'IQ']):
-            pass
-        else:
-            raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
+                raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
 
         # Ensure flip angle is between 0 and pi radians
         self.flip = flip
@@ -85,7 +89,7 @@ class Pulse:
 
         # Assign or calculate time step
         self.time_step = time_step
-        if self.time_step is None:
+        if self.time_step is None and not userIQ:
             self.oversample_factor = kwargs.get('oversample_factor', 10)
             self.estimate_timestep()
 
@@ -97,10 +101,11 @@ class Pulse:
             self.profile = self.profile if len(self.profile) == 2 else self.profile.T
 
         # Calculate time domain
-        self.time = np.arange(0, self.pulse_time + self.time_step, self.time_step)
-        self.ti = self.time - self.pulse_time / 2
+        if not userIQ:
+            self.time = np.arange(0, self.pulse_time + self.time_step - eps, self.time_step)
+            self.ti = self.time - self.pulse_time / 2
 
-        # Claculate shape
+        # Calculate shape
         self._shape()
 
         # Perform resonator compensation if profile is provided
@@ -116,9 +121,10 @@ class Pulse:
             self._compute_IQ()
 
     def _shape(self):
-        """
-        Calculate shape of amplitude and frequency modulations
-        """
+        """Calculate shape of amplitude and frequency modulations if IQ not provided by user, otherwise set the
+        time domain"""
+
+        # Check if IQ provided by user and determine if I, Q or IQ were passed
         if any(x in self.__dict__ for x in ['I', 'Q', 'IQ']):
             lenIQ = [len(self.__dict__[X]) for X in ['I', 'Q'] if X in self.__dict__][0]
             IQ = self.__dict__.get('IQ', None)
@@ -127,37 +133,41 @@ class Pulse:
                 I = self.__dict__.get('I', np.zeros(lenIQ))
                 IQ = I + 1j * Q
 
+            # Calculate time/time step from pulse time and IQ
             self.time = np.linspace(0, self.pulse_time, len(IQ))
-            if hasattr(self, 'time_step'):
-                new_time = np.arange(0, self.pulse_time + self.time_step, self.time_step)
+            if self.time_step is not None:
+                new_time = np.arange(0, self.pulse_time + self.time_step - eps, self.time_step)
                 new_IQ = interp1d(self.time, IQ)(new_time)
                 self.time = new_time
                 self.IQ = new_IQ
             else:
                 self.time_step = np.mean(np.diff(self.time))
+                self.IQ = IQ
 
+            # Convert amplitude if provided by user
             if self.amp is not None:
                 self.IQ = self.amp * self.IQ
             else:
                 self.amp = np.max(self.IQ)
 
+            # Assign empty variabels if user provided IQ
             self.amplitude_modulation = []
             self.frequency_modulation = []
             self.phase = []
-            
+
+        # Calculate am and fm from functions
         else:
             self.amplitude_modulation = self.am_func(self)
             self.frequency_modulation, self.phase = self.fm_func(self)
 
     def bw_comp(self):
-        """
-        Calculate resonator profile compensation and apply to pulse shape
-        """
+        """Calculate resonator profile compensation and apply to pulse shape"""
 
         nu0 = self.frequency_modulation.copy()
         A0 = self.amplitude_modulation.copy()
         newaxis = nu0 + np.mean(self.freq) + self.mwFreq * 1e3
 
+        # Calculate for user supplied profile
         if hasattr(self, 'profile'):
             f = self.profile[0] * 1e3
             H = self.profile[1]
@@ -172,11 +182,11 @@ class Pulse:
 
             profile = interp1d(f, H)(newaxis)
 
+        # Calculate for user specified resonator frequency
         elif hasattr(self, 'resonator_frequency'):
             f0 = self.resonator_frequency * 1e3
             QL = self.resonator_ql
             profile = np.abs(1 / (1 + 1j * QL * (newaxis / f0 - f0 / newaxis)))
-
         else:
             raise AttributeError('Pulse object must have `resonator_frequency` or `profile` defined in kwargs')
 
@@ -195,10 +205,10 @@ class Pulse:
             self.amplitude_modulation = pchip_interpolate(nu0, A0, nu_adapted)
 
     def _compute_flip_amp(self):
+        """Compute flip angle if not supplied by user"""
 
         if self.fm_func.__name__ == 'none':
             self.amp = self.flip / (2 * np.pi * np.trapz(self.amplitude_modulation, self.time))
-
         else:
             if self.Qcrit is None:
                 self.Qcrit = (2 / np.pi) * np.log(2 / (1 + np.cos(self.flip)))
@@ -224,17 +234,20 @@ class Pulse:
             self.amp = np.sqrt(2 * np.pi * self.Qcrit * sweeprate) / (2 * np.pi)
 
     def _compute_IQ(self):
+        """Compute IQ if not supplied by user"""
         self.amplitude_modulation = self.amp * self.amplitude_modulation
         self.frequency_modulation += np.mean(self.freq)
         self.phase = self.phase + 2 * np.pi * np.mean(self.freq) * self.time + self.inp_phase
         self.IQ = self.amplitude_modulation * np.exp(1j * self.phase)
 
     def estimate_timestep(self):
+        """Estimate times step based off of Nyquist theorem"""
         if self.fm_func.__name__ == 'none':
             FM_BW = 0
         else:
-            FM_BW = np.abs(self.freq[1] -self.freq[0])
+            FM_BW = np.abs(self.freq[1] - self.freq[0])
 
+        # Guess initial dt
         dt = 1e-4
         tpulse = Pulse(time_step=dt, pulse_time=self.pulse_time, flip=self.flip, amp=1,
                        mwFreq=self.mwFreq, Qcrit=self.Qcrit, freq=self.freq,
@@ -245,12 +258,13 @@ class Pulse:
         else:
             zf = 4 * 2 ** nextpow2(len(tpulse.time))
 
+        # perform FFT and calculate bandwidth
         A0fft = np.abs(np.fft.fftshift(np.fft.fft(tpulse.amplitude_modulation, zf)))
         f = np.fft.fftshift(np.fft.fftfreq(zf, dt))
         intg = cumtrapz(A0fft, initial=0)
         idx = np.argmin(np.abs(intg - 0.5 * np.max(intg)))
         indbw = np.squeeze(np.argwhere(A0fft[idx:] > 0.1 * max(A0fft)))
-        AM_BW = 2 * (f[idx + indbw[-1]] - f[idx])
+        AM_BW = 2 * (f[idx + indbw[-1] + 1] - f[idx])
         BW = max(FM_BW, AM_BW)
 
         maxFreq = max(abs(np.mean(self.freq) + np.array([-1, 1]) * BW / 2))
@@ -266,7 +280,15 @@ class Pulse:
         self.time_step = self.pulse_time / np.rint(self.pulse_time / self.time_step)
 
     def save_bruker(self, filename, shape_number=10):
-        
+        """
+        Parameters
+        ----------
+        filename : str
+            name of file
+        shape_number : int
+            Shape number to save. Must be larger than 9
+        """
+
         # Ensure file has correct prefix
         if filename[-4:] != '.shp':
             filename += '.shp'
@@ -282,32 +304,42 @@ class Pulse:
                 f.write(f'{C.real:1.5e},{C.imag:1.5e}\n')
             f.write(f'end shape{shape_number}\n')
 
-    def exciteprofile(self):
+    def exciteprofile(self, offsets=None):
+        """
+        Calculate the pulse excitation profile over the provided frequency offset range
+        Parameters
+        ----------
+        offsets: ndarray
+            Range of frequency offsets for calculation of the excitation profile. If not provided, it will be calculated
+            over the estimated bandwidth of the pulse
+        """
+        # Assign self.offsets if user provides new offset when calling exciteprofile
+        if offsets is not None:
+            self.offsets = offsets
 
+        # Default offsets to 201 elements
         if not hasattr(self, 'nOffsets'):
             self.nOffsets = 201
 
-
+        # Calculate offsets from expected bandwidth if not provided
         if not hasattr(self, 'offsets'):
-
             if nextpow2(len(self.time)) < 10:
                 zf = 2 ** 10
             else:
                 zf = 4 * 2 **nextpow2(len(self.time))
 
             IQft = np.abs(np.fft.fftshift(np.fft.fft(self.IQ, zf)))
-            f = np.fft.fftfreq(zf, self.time_step)
+            f = np.fft.fftshift(np.fft.fftfreq(zf, self.time_step))
             indbw = np.argwhere(IQft > 0.5 * max(IQft))
             bw = abs(f[indbw[-1]] - f[indbw[0]])
             center_freq = np.mean([f[indbw[-1]], f[indbw[0]]])
             self.offsets = np.squeeze(np.linspace(-bw, bw, self.nOffsets) + center_freq)
 
+        # Calculate excitation profile
         self.offsets = np.atleast_1d(self.offsets)
         npoints = len(self.time)
-        noffsets = len(self.offsets)
         Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
-
         eye2 = np.eye(2, dtype=complex)
         Density0 = -Sz.astype(complex)
-        self.Mag = calc_mag(self.offsets, self.IQ, Sx.astype(complex), Sy.astype(complex), Sz.astype(complex), npoints, self.time, eye2, Density0)
+        self.Mx, self.My, self.Mz = calc_mag(self.offsets, self.IQ, Sx.astype(complex), Sy.astype(complex), Sz.astype(complex), npoints, self.time, eye2, Density0)
 
