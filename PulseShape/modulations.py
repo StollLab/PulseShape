@@ -250,7 +250,7 @@ def linear(Pulse):
 @fm_func
 def tanh(Pulse):
     """Frequency modulation function for a pulse with hyperbolic tangent frequency modulation"""
-    if not all(hasattr(Pulse, param) for param in ['beta', 'freq'])
+    if not all(hasattr(Pulse, param) for param in ['beta', 'freq']):
         raise AttributeError('Pulse object must have `beta` parameter and `freq` parameter (length 2)')
 
     Pulse.BWinf = (Pulse.freq[1] - Pulse.freq[0]) / np.tanh(Pulse.beta / 2)
