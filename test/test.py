@@ -9,6 +9,7 @@ import pytest
 sigma2fwhm = 2.35482004503
 fwhm2sigma = 1 / sigma2fwhm
 
+
 def test_bwcomp():
     profile = np.loadtxt('data/Transferfunction.dat')
     pulse = Pulse(pulse_time=0.150,

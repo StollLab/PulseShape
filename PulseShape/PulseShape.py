@@ -3,17 +3,15 @@ from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from .modulations import AmplitudeModulations, FrequencyModulations
 from .utils import sop, calc_mag
-# TODO: implement product of amplitude functions
-# TODO: implement gaussian_cascade and fourier_series am_funcs
-# TODO: implement user_defined IQ
-
 
 
 def nextpow2(x):
     """Clone of MATLAB's nextpow function"""
     return 1 if x == 0 else int(np.ceil(np.log2(x)))
 
+
 eps = np.finfo(float).eps
+
 
 class Pulse:
     """
