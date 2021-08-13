@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import norm
 from scipy.interpolate import interp1d, pchip_interpolate
