@@ -24,6 +24,8 @@ before_script:
 
 test:
   script:
+    - pwd 
+    - ls
     - pytest test
 
 run:
