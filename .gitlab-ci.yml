@@ -24,7 +24,8 @@ before_script:
 
 test:
   script:
-    - pytest test/test.py
+    - cd test
+    - pytest test.py
 
 run:
   script:
