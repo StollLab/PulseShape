@@ -24,7 +24,7 @@ before_script:
 
 test:
   script:
-    - pytest
+    - pytest test
 
 run:
   script:
