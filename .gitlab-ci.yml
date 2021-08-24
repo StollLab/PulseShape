@@ -4,6 +4,7 @@ before_script:
   - virtualenv venv
   - source venv/bin/activate
   - pip install -r requirements.txt
+  - pip install pytest
 
 .test_template: &test_definition
   script:
