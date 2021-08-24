@@ -95,33 +95,40 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PulseShape import Pulse
 
-    profile = np.loadtxt('data/Transferfunction.dat')
-    st_pulse = Pulse(pulse_time=0.150,
-                     time_step=0.000625,
-                     flip=np.pi,
-                     freq=[40, 120],
-                     type='sech/tanh',
-                     beta=10,
-                     profile=profile)
+profile = np.loadtxt('data/Transferfunction.dat')
+st_pulse = Pulse(pulse_time=0.150,
+                 time_step=0.000625,
+                 flip=np.pi,
+                 freq=[40, 120],
+                 type='sech/tanh',
+                 beta=10,
+                 profile=profile)
 
-    g_pulse = Pulse(pulse_time=0.06,
-                    time_step=0.000625,
-                    flip=np.pi,
-                    type='gaussian',
-                    trunc=0.1)
+g_pulse = Pulse(pulse_time=0.06,
+                time_step=0.000625,
+                flip=np.pi,
+                type='gaussian',
+                trunc=0.1)
 
-    fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 10))
-    ax1.set_title('Amplitude Modulation')
-    ax1.plot(st_pulse.time * 1e3, st_pulse.amplitude_modulation, label='sech/tanh')
-    ax1.plot(g_pulse.time * 1e3, g_pulse.amplitude_modulation, label='gaussian')
-    ax1.set_ylabel('Amplitude (MHz)')
-    ax1.legend()
+offsets = np.linspace(-20, 140, 256)
+st_pulse.exciteprofile(offsets)
+g_pulse.exciteprofile(offsets)
 
-    ax2.set_title('Frequency Modulation')
-    ax2.plot(st_pulse.time * 1e3, st_pulse.frequency_modulation)
-    ax2.plot(g_pulse.time * 1e3, g_pulse.frequency_modulation)
-    ax2.set_xlabel('Time (ns)')
-    ax2.set_ylabel('Frequency (MHz)')
-    plt.show()
+fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 10))
+ax1.set_title('Pulse IQ')
+ax1.plot(st_pulse.time * 1e3, st_pulse.IQ.real, label=r'sech/tanh $\Re$', color='C0')
+ax1.plot(st_pulse.time * 1e3, st_pulse.IQ.imag, label=r'sech/tanh $\Im$', alpha=0.5, color='C0')
+ax1.plot(g_pulse.time * 1e3, g_pulse.IQ.real, label='gaussian', color='C1')
+ax1.set_ylabel('Amplitude')
+ax1.set_ylabel("Time (ns)")
+ax1.legend()
+
+ax2.set_title('Excitation Profile')
+ax2.plot(offsets, st_pulse.Mz)
+ax2.plot(offsets, g_pulse.Mz)
+ax2.set_xlabel('Frequency Offset (MHz)')
+ax2.set_ylabel('Mz')
+plt.show()
+fig.savefig('../img/g_st.png')
 ```
-<img src="img/AM_FM.png" width="400" class="center"/>
+<img src="img/g_st.png" width="400" class="center"/>
