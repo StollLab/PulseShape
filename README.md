@@ -38,7 +38,7 @@ plt.ylabel('Amplitude')
 plt.legend()
 plt.show()
 ```
-<img src="img/sechtanh.png" width="400"  class="center"/>
+<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/sechtanh.png" width="400"  class="center"/>
 
 
 </td>
@@ -81,7 +81,7 @@ height=448;
 set(gcf,'position',[x0,y0,width,height])
 
 ```
-<img src="img/sechtanhes.png" width="400" class="center"/>
+<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/sechtanhes.png" width="400" class="center"/>
 </td>
 </tr>
 </table>
@@ -129,6 +129,5 @@ ax2.plot(offsets, g_pulse.Mz)
 ax2.set_xlabel('Frequency Offset (MHz)')
 ax2.set_ylabel('Mz')
 plt.show()
-fig.savefig('../img/g_st.png')
 ```
-<img src="img/g_st.png" width="400" class="center"/>
+<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/g_st.png" width="400" class="center"/>
