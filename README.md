@@ -130,4 +130,4 @@ ax2.set_xlabel('Frequency Offset (MHz)')
 ax2.set_ylabel('Mz')
 plt.show()
 ```
-<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/g_st.png" width="400" class="center"/>
+<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/g_st.png" width="800" class="center"/>
