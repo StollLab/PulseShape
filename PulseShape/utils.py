@@ -111,8 +111,8 @@ def bloch(pulse):
         Upulses[i] = reduce(lambda x, y: y@x, dUs[i, :-1])
 
     density0 = -Sz.astype(complex)
-    density = np.einsum('ijk,kl->ijl', Upulses, density0)
-    density = np.einsum('ikl,ilm->ikm', density, Upulses.conjugate().transpose((0, 2, 1))).transpose((0, 2, 1))
+    density = np.einsum('ijk,kl,ilm->ijm', Upulses, density0, Upulses.conj().transpose((0, 2, 1)))
+    density = density.transpose((0, 2, 1))
 
     Mag = np.zeros((3, len(pulse.offsets)))
     Mag[0] = -2 * (Sx[None, :, :] * density).sum(axis=(1, 2)).real
