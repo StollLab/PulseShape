@@ -97,7 +97,7 @@ def bloch(pulse):
     dt = pulse.time[1] - pulse.time[0]
 
     H = pulse.offsets[:, None, None] * Sz
-    H = H[:, None, :, :] + pulse.IQ.real[:, None, None] * Sx[None, :, :] + pulse.IQ.imag[:, None, None] * Sy[None, :, :]
+    H = H[:, None, :, :] + pulse.IQ.real[:, None, None] * Sx + pulse.IQ.imag[:, None, None] * Sy
 
     M = -2j * np.pi * dt * H
     q = np.sqrt(M[:, :, 0, 0]**2 - np.abs(M[:, :, 0, 1])**2)
