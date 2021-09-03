@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from .modulations import AmplitudeModulations, FrequencyModulations
-from .utils import sop, calc_mag
+from .utils import sop, bloch
 
 
 def nextpow2(x):
@@ -335,9 +335,5 @@ class Pulse:
 
         # Calculate excitation profile
         self.offsets = np.atleast_1d(self.offsets)
-        npoints = len(self.time)
-        Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
-        eye2 = np.eye(2, dtype=complex)
-        Density0 = -Sz.astype(complex)
-        self.Mx, self.My, self.Mz = calc_mag(self.offsets, self.IQ, Sx.astype(complex), Sy.astype(complex), Sz.astype(complex), npoints, self.time, eye2, Density0)
+        self.Mx, self.My, self.Mz = bloch(self)
 

@@ -1,3 +1,4 @@
+from functools import reduce
 import numpy as np
 from scipy.sparse import csr_matrix, kron
 from numba import njit
@@ -90,3 +91,32 @@ def calc_mag(offsets, IQ, Sx, Sy, Sz, npoints, time, eye2, Density0):
 
     return Mag
 
+def bloch(pulse):
+    """Vectorization of solution bloch equations"""
+    Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
+    dt = pulse.time[1] - pulse.time[0]
+
+    H = pulse.offsets[:, None, None] * Sz
+    H = H[:, None, :, :] + pulse.IQ.real[:, None, None] * Sx[None, :, :] + pulse.IQ.imag[:, None, None] * Sy[None, :, :]
+
+    M = -2j * np.pi * dt * H
+    q = np.sqrt(M[:, :, 0, 0]**2 - np.abs(M[:, :, 0, 1])**2)
+
+    dUs = np.cosh(q)[:, :, None, None] * np.eye(2, dtype=complex) + (np.sinh(q) / q)[:, :, None, None] * M
+    mask = np.abs(q) < 1e-10
+    dUs[mask] = np.eye(2, dtype=complex) + M[mask]
+
+    Upulses = np.empty((len(dUs), 2, 2), dtype=complex)
+    for i in range(len(dUs)):
+        Upulses[i] = reduce(lambda x, y: y@x, dUs[i, :-1])
+
+    density0 = -Sz.astype(complex)
+    density = np.einsum('ijk,kl->ijl', Upulses, density0)
+    density = np.einsum('ikl,ilm->ikm', density, Upulses.conjugate().transpose((0, 2, 1))).transpose((0, 2, 1))
+
+    Mag = np.zeros((3, len(pulse.offsets)))
+    Mag[0] = -2 * (Sx[None, :, :] * density).sum(axis=(1, 2)).real
+    Mag[1] = -2 * (Sy[None, :, :] * density).sum(axis=(1, 2)).real
+    Mag[2] = -2 * (Sz[None, :, :] * density).sum(axis=(1, 2)).real
+
+    return Mag
