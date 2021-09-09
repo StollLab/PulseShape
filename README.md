@@ -24,7 +24,7 @@ python setup.py install
 ```
 
 ## e580 Setup
-Instructions for setting up python and PulseShape on the Linux system that usually ships with e580 spectrometers comming soon.
+Instructions for setting up python and PulseShape on the Linux system that usually ships with e580 spectrometers coming soon.
 
 ## Example: sech\tanh pulse with resonator compensation
 <table>
