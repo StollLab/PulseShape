@@ -13,7 +13,7 @@ PulseShape can be installed and updated using `pip`, the python package manager.
 ```bash
 pip install PulseShape
 ```
-PulseShape is tested to work on python 3.6-3.9, but is currently only available through `pip` for python 3.9. While one of the major purposes of PulseShape is to work on Linux systems, PulseShape works well on all systems (Windows, Mac and Linux) and only depends on numpy and scipy.
+PulseShape is tested to work on python 3.6-3.9. While one of the major purposes of PulseShape is to work on Linux systems, PulseShape works well on all systems (Windows, Mac and Linux) and only depends on numpy and scipy.
 
 Alternatively, PulseShape can be installed by downloading or cloning the git repository.
 
