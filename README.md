@@ -2,10 +2,29 @@
 
 PulseShape is an EasySpin `pulse` function clone written in python. The major purpose for 
 rewriting pulse in Python is to free the function from the proprietary MATLAB universe and 
-make it easier to use on linux systems that often ship with e580 spectrometers. 
+make it easier to use on Linux systems that often ship with e580 spectrometers. 
 
 PulseShape is built around the `Pulse` object which accepts arguments similar to those 
 used by the easyspin `pulse` function. 
+
+## Installation
+PulseShape can be installed and updated using `pip`, the python package manager. 
+
+```bash
+pip install PulseShape
+```
+PulseShape is tested to work on python 3.6-3.9. While one of the major purposes of PulseShape is to work on Linux systems, PulseShape works well on all systems (Windows, Mac and Linux) and only depends on numpy and scipy.
+
+Alternatively, PulseShape can be installed by downloading or cloning the git repository.
+
+```bash
+git clone https://gitlab.com/mtessmer/PulseShape.git
+cd PulseShape
+python setup.py install
+```
+
+## e580 Setup
+Instructions for setting up python and PulseShape on the Linux system that usually ships with e580 spectrometers coming soon.
 
 ## Example: sech\tanh pulse with resonator compensation
 <table>
