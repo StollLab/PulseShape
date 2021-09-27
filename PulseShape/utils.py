@@ -48,8 +48,9 @@ def sop(spins, comps):
         return [np.array(Op.todense()) for Op in Ops]
 
 
-def bloch(pulse):
-    """Vectorization of solution bloch equations"""
+def pulse_propagation(pulse):
+    """Vectorization of solution pulse propagation"""
+
     Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
     dt = pulse.time[1] - pulse.time[0]
 
