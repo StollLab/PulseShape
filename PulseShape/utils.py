@@ -89,7 +89,7 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
     else:
         Upulses = np.empty((len(dUs), len(pulse.time), 2, 2), dtype=complex)
         for i in range(len(dUs)):
-            Upulses[i] = list((accumulate(dUs[i, :-1], lambda x, y: y @ x, initial=np.eye(2))))
+            Upulses[i] = [np.eye(2)] +  list((accumulate(dUs[i, :-1], lambda x, y: y @ x)))
 
         density = np.einsum('hijk,kl,hilm->hijm', Upulses, density0, Upulses.conj().transpose((0, 1, 3, 2)))
         density = density.transpose((0, 1, 3, 2))
