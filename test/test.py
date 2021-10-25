@@ -24,6 +24,7 @@ def test_bwcomp():
     ans = ans[:, 0] + 1j * ans[:, 1]
     np.testing.assert_almost_equal(pulse.IQ, ans)
 
+
 def test_bwcomp2():
     pulse = Pulse(pulse_time=0.128,
                   time_step=0.00001,
@@ -47,11 +48,9 @@ def test_bwcomp2():
                    trise=0.030,
                    oversample_factor=10)
 
-
     f0 = np.arange(9, 10 + 1e-5, 1e-5)
-    H = 1/(1 + 1j * pulse2.resonator_ql * (f0 / pulse2.resonator_frequency - pulse2.resonator_frequency / f0))
+    H = 1 / (1 + 1j * pulse2.resonator_ql * (f0 / pulse2.resonator_frequency - pulse2.resonator_frequency / f0))
     v1 = np.abs(H)
-
 
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
     A = np.ones_like(t0)
@@ -60,17 +59,17 @@ def test_bwcomp2():
     A[-len(t_part):] = A[len(t_part) - 1::-1]
 
     BW = pulse.freq[1] - pulse.freq[0]
-    f = -(BW/2) + (BW/pulse.pulse_time) * t0
+    f = -(BW / 2) + (BW / pulse.pulse_time) * t0
 
     phi = 2 * np.pi * cumtrapz(f, t0, initial=0)
     phi += np.abs(np.min(phi))
 
-    v1_range = interp1d(f0 * 10**3, v1, fill_value=0, bounds_error=False)(f + pulse.mwFreq * 10**3)
+    v1_range = interp1d(f0 * 10 ** 3, v1, fill_value=0, bounds_error=False)(f + pulse.mwFreq * 10 ** 3)
 
-    const = np.trapz(1/v1_range**2) / t0[-1]
-    t_f = cumtrapz((1 / const) * (1 / v1_range**2), initial=0)
+    const = np.trapz(1 / v1_range ** 2) / t0[-1]
+    t_f = cumtrapz((1 / const) * (1 / v1_range ** 2), initial=0)
 
-    f_adapted = pchip_interpolate(t_f, f + pulse.mwFreq * 10**3, t0)
+    f_adapted = pchip_interpolate(t_f, f + pulse.mwFreq * 10 ** 3, t0)
     f_adapted -= pulse.mwFreq * 10 ** 3
     phi_adapted = 2 * np.pi * cumtrapz(f_adapted, t0, initial=0)
     phi_adapted += np.abs(np.min(phi_adapted))
@@ -80,6 +79,7 @@ def test_bwcomp2():
 
     np.testing.assert_almost_equal(IQ0, pulse.IQ)
     np.testing.assert_almost_equal(IQ0_adapted, pulse2.IQ)
+
 
 def test_bwcomp3():
     pulse = Pulse(pulse_time=0.200,
@@ -91,7 +91,7 @@ def test_bwcomp3():
 
     QL = 60
     f0 = np.arange(9.2, 9.5 + 1e-2, 1e-2)
-    dipfreq=9.35
+    dipfreq = 9.35
     v1 = np.abs(1 / (1 + 1j * QL * (f0 / dipfreq - dipfreq / f0)))
 
     pulse2 = Pulse(pulse_time=0.200,
@@ -114,7 +114,7 @@ def test_bwcomp3():
           np.log(np.cosh((pulse.beta / pulse.pulse_time) * (t0 - pulse.pulse_time / 2)))
     phi = 2 * np.pi * phi
 
-    v1_range = interp1d(f0 * 10**3, v1)(f + pulse2.mwFreq * 10 ** 3)
+    v1_range = interp1d(f0 * 10 ** 3, v1)(f + pulse2.mwFreq * 10 ** 3)
     v1_range = A * v1_range
 
     const = np.trapz(1. / v1_range ** 2 / t0[-1], f)
@@ -133,6 +133,7 @@ def test_bwcomp3():
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
     np.testing.assert_almost_equal(pulse2.IQ, IQ0_adapted)
 
+
 def test_estimate_timestep():
     pulse = Pulse(pulse_time=0.128,
                   flip=np.pi,
@@ -147,7 +148,7 @@ def test_estimate_timestep():
 def test_linear_chirp():
     pulse = Pulse(pulse_time=0.064,
                   time_step=0.0001,
-                  flip=np.pi/2,
+                  flip=np.pi / 2,
                   freq=[60, 180],
                   type='rectangular/linear')
 
@@ -194,6 +195,7 @@ def test_quartersin_chirp():
     np.testing.assert_almost_equal(pulse.amp * A, pulse.amplitude_modulation)
     np.testing.assert_almost_equal(f, pulse.frequency_modulation)
 
+
 def test_halfsin_chirp():
     pulse = Pulse(pulse_time=0.128,
                   flip=np.pi,
@@ -221,15 +223,16 @@ def test_halfsin_chirp():
     np.testing.assert_almost_equal(pulse.frequency_modulation, f)
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
+
 def test_gaussian_rd():
     profile = np.loadtxt('data/Transferfunction.dat').T
 
     pulse = Pulse(pulse_time=0.060,
-                    time_step=0.000625,
-                    flip=np.pi,
-                    type='gaussian',
-                    profile=profile,
-                    trunc=0.1)
+                  time_step=0.000625,
+                  flip=np.pi,
+                  type='gaussian',
+                  profile=profile,
+                  trunc=0.1)
 
     ans = np.genfromtxt("data/gaussian.csv", delimiter=',', dtype=complex,
                         converters={0: lambda x: complex(x.decode('utf8').replace('i', 'j'))})
@@ -249,7 +252,6 @@ def test_rectrangular():
 
 
 def test_sechtanh():
-
     pulse = Pulse(pulse_time=0.200,
                   type='sech/tanh',
                   freq=[120, 0],
@@ -259,28 +261,30 @@ def test_sechtanh():
 
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
     dFreq = pulse.freq[1] - pulse.freq[0]
-    dt = t0-pulse.pulse_time/2
+    dt = t0 - pulse.pulse_time / 2
 
-    Qcrit=5
-    BW = dFreq/np.tanh(pulse.beta/2)
-    Amp = np.sqrt((pulse.beta * np.abs(BW)*Qcrit) / (2 * np.pi*2*pulse.pulse_time))
-    A = 1/np.cosh((pulse.beta / pulse.pulse_time)*(t0 - pulse.pulse_time / 2))
-    f = (dFreq / (2 * np.tanh(pulse.beta / 2)))*np.tanh((pulse.beta / pulse.pulse_time) * dt)
+    Qcrit = 5
+    BW = dFreq / np.tanh(pulse.beta / 2)
+    Amp = np.sqrt((pulse.beta * np.abs(BW) * Qcrit) / (2 * np.pi * 2 * pulse.pulse_time))
+    A = 1 / np.cosh((pulse.beta / pulse.pulse_time) * (t0 - pulse.pulse_time / 2))
+    f = (dFreq / (2 * np.tanh(pulse.beta / 2))) * np.tanh((pulse.beta / pulse.pulse_time) * dt)
 
-    phi = (dFreq/(2*np.tanh(pulse.beta/2)))*(pulse.pulse_time/pulse.beta) * np.log(np.cosh((pulse.beta/pulse.pulse_time) * dt))
+    phi = (dFreq / (2 * np.tanh(pulse.beta / 2))) * (pulse.pulse_time / pulse.beta) * np.log(
+        np.cosh((pulse.beta / pulse.pulse_time) * dt))
     phi = 2 * np.pi * (phi + np.mean(pulse.freq) * t0)
-    IQ0 = Amp * A * np.exp(1j*phi)
+    IQ0 = Amp * A * np.exp(1j * phi)
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
     np.testing.assert_almost_equal(pulse.amplitude_modulation, Amp * A)
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
     np.testing.assert_almost_equal(phi, pulse.phase)
 
+
 def test_gaussian():
     pulse = Pulse(pulse_time=0.200,
                   type='gaussian',
                   tFWHM=0.064,
-                  amp=((np.pi / 0.064)/(2 * np.pi)),
+                  amp=((np.pi / 0.064) / (2 * np.pi)),
                   freq=100,
                   time_step=0.0001)
 
@@ -288,16 +292,17 @@ def test_gaussian():
     A = norm(pulse.pulse_time / 2, pulse.tFWHM * fwhm2sigma).pdf(t0)
     A = pulse.amp * (A / max(A))
     f = np.cos(2 * np.pi * pulse.freq * t0) + 1j * np.sin(2 * np.pi * pulse.freq * t0)
-    IQ0 = A*f
+    IQ0 = A * f
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
 
 def test_gaussian2():
     dt = 0.001
     t0 = np.arange(-0.300, 0.300 + dt, dt)
     A = norm(0, 0.100 * fwhm2sigma).pdf(t0)
     A = A / max(A)
-    ind = np.argwhere(np.rint(np.abs(A-0.5)*1e5) / 1e5 == 0).flatten()
+    ind = np.argwhere(np.rint(np.abs(A - 0.5) * 1e5) / 1e5 == 0).flatten()
     t0 = t0[ind[0]:ind[1] + 1] - t0[ind[0]]
     IQ0 = A[ind[0]:ind[1] + 1]
 
@@ -309,6 +314,7 @@ def test_gaussian2():
 
     np.testing.assert_almost_equal(pulse.IQ.real, IQ0)
 
+
 def test_WURST():
     pulse = Pulse(pulse_time=0.500,
                   type='WURST/linear',
@@ -319,7 +325,7 @@ def test_WURST():
     A = 1 - np.abs((np.sin((np.pi * (pulse.time - pulse.pulse_time / 2)) / pulse.pulse_time)) ** pulse.nwurst)
     BW = np.diff(pulse.freq)[0]
     f = -(BW / 2) + (BW / pulse.pulse_time) * pulse.time
-    phi = cumtrapz(f, pulse.time - pulse.pulse_time/2, initial=0)
+    phi = cumtrapz(f, pulse.time - pulse.pulse_time / 2, initial=0)
     phi += np.abs(min(phi)) + np.mean(pulse.freq) * pulse.time
 
     IQ0 = pulse.amp * A * np.exp(2j * np.pi * phi)
@@ -328,6 +334,7 @@ def test_WURST():
     np.testing.assert_almost_equal(pulse.amplitude_modulation, pulse.amp * A)
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
     np.testing.assert_almost_equal(pulse.phase, 2 * np.pi * phi)
+
 
 def test_higherordersech():
     pulse = Pulse(pulse_time=0.600,
@@ -339,7 +346,7 @@ def test_higherordersech():
                   amp=20)
 
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
-    ti = t0 - pulse.pulse_time/2
+    ti = t0 - pulse.pulse_time / 2
     A = 1 / np.cosh((pulse.beta) * (2 ** (pulse.n - 1)) * (ti / pulse.pulse_time) ** pulse.n)
     A = pulse.amp * A
     f = cumtrapz(A ** 2 / np.trapz(A ** 2, ti), ti, initial=0)
@@ -355,6 +362,7 @@ def test_higherordersech():
     np.testing.assert_almost_equal(pulse.frequency_modulation, f + np.mean(pulse.freq))
     np.testing.assert_almost_equal(pulse.phase, 2 * np.pi * phi)
 
+
 def test_sinc():
     pulse = Pulse(pulse_time=0.200,
                   type='sinc',
@@ -363,12 +371,13 @@ def test_sinc():
                   amp=1)
 
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
-    ti = t0 - pulse.pulse_time/2
+    ti = t0 - pulse.pulse_time / 2
     x = 2 * np.pi * ti / pulse.zerocross
     A = np.sin(x) / x
     A[ti == 0] = 1
     IQ0 = A
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
 
 def test_asymmetric_sech():
     pulse = Pulse(pulse_time=0.100,
@@ -383,15 +392,15 @@ def test_asymmetric_sech():
     npts = len(t0)
     ti = t0 - pulse.pulse_time / 2
     A = np.ones(len(t0))
-    A[:int(np.rint(npts/2)) - 1] = 1 / np.cosh((pulse.beta) * (2**(pulse.n[0] - 1)) *
-                                          (ti[:int(np.rint(npts/2)) - 1]/pulse.pulse_time) ** pulse.n[0])
+    A[:int(np.rint(npts / 2)) - 1] = 1 / np.cosh((pulse.beta) * (2 ** (pulse.n[0] - 1)) *
+                                                 (ti[:int(np.rint(npts / 2)) - 1] / pulse.pulse_time) ** pulse.n[0])
     A[int(np.rint(npts / 2)):] = 1 / np.cosh((pulse.beta) * (2 ** (pulse.n[1] - 1)) *
-                                        (ti[int(np.rint(npts / 2)):] / pulse.pulse_time) ** pulse.n[1])
+                                             (ti[int(np.rint(npts / 2)):] / pulse.pulse_time) ** pulse.n[1])
 
     A = A * pulse.amp
-    f = cumtrapz(A**2 / np.trapz(A**2, ti), ti, initial=0)
+    f = cumtrapz(A ** 2 / np.trapz(A ** 2, ti), ti, initial=0)
     BW = pulse.freq[1] - pulse.freq[0]
-    f = BW * f - BW/2
+    f = BW * f - BW / 2
     phi = cumtrapz(f, ti, initial=0)
     phi += abs(min(phi))
     IQ0 = A * np.exp(2j * np.pi * phi)
@@ -407,14 +416,16 @@ pulses1 = [{'pulse_time': 0.060, 'type': 'rectangular'},
            {'pulse_time': 0.100, 'trise': 0.020, 'type': 'quartersin'},
            {'pulse_time': 0.500, 'beta': 12, 'type': 'sech'},
            {'pulse_time': 0.300, 'nwurst': 20, 'type': 'WURST'}]
+
+
 @pytest.mark.parametrize('pulse', pulses1)
 def test_flip_am(pulse):
     offsets = 0
     tol = 1e-12
 
-    p1 = Pulse(flip=np.pi/2, offsets=offsets, **pulse)
+    p1 = Pulse(flip=np.pi / 2, offsets=offsets, **pulse)
     p1.exciteprofile()
-    p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
+    p2 = Pulse(flip=np.pi, offsets=offsets, **pulse)
     p2.exciteprofile()
     print(p1.Mz)
     assert np.all(p1.Mz < tol)
@@ -424,19 +435,21 @@ def test_flip_am(pulse):
 
 
 pulses2 = [{'type': 'quartersin/linear', 'pulse_time': 0.200, 'trise': 0.050, 'freq': [-250, 250]},
-           {'type': 'WURST/linear', 'pulse_time': 0.200, 'nwurst':30, 'freq': [150, -150]},
-           {'type': 'sech/tanh', 'pulse_time': 0.400, 'beta':10, 'freq': [-35, 35]},
+           {'type': 'WURST/linear', 'pulse_time': 0.200, 'nwurst': 30, 'freq': [150, -150]},
+           {'type': 'sech/tanh', 'pulse_time': 0.400, 'beta': 10, 'freq': [-35, 35]},
            {'type': 'sech*WURST/tanh', 'pulse_time': 0.500, 'beta': 4, 'nwurst': 8, 'freq': [60, -60]},
            {'type': 'sech/uniformq', 'pulse_time': 0.300, 'beta': 10, 'n': 4, 'freq': [-100, 100]},
            {'type': 'sech/uniformq', 'pulse_time': 0.400, 'beta': 7, 'n': 12, 'freq': [-125, 125]}]
+
+
 @pytest.mark.parametrize('pulse', pulses2)
 def test_flip_amfm(pulse):
     offsets = 0
     tol = 1e-2
 
-    p1 = Pulse(flip=np.pi/2, offsets=offsets, **pulse)
+    p1 = Pulse(flip=np.pi / 2, offsets=offsets, **pulse)
     p1.exciteprofile()
-    p2 = Pulse(flip=np.pi, offsets=offsets,  **pulse)
+    p2 = Pulse(flip=np.pi, offsets=offsets, **pulse)
     p2.exciteprofile()
 
     print(p1.Mz)
@@ -455,11 +468,12 @@ def test_G3():
 
     A = np.zeros_like(t0)
     for An, xn, Fn in zip(A0, x0, FWHM):
-        A += An * np.exp(-(4 * np.log(2) / Fn**2) * (t0 - xn) ** 2)
+        A += An * np.exp(-(4 * np.log(2) / Fn ** 2) * (t0 - xn) ** 2)
 
     IQ0 = A / max(A)
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
 
 def test_G4():
     pulse = Pulse(type='G4', pulse_time=0.800, time_step=0.001, amp=1)
@@ -471,11 +485,12 @@ def test_G4():
 
     A = np.zeros_like(t0)
     for An, xn, Fn in zip(A0, x0, FWHM):
-        A += An * np.exp(-(4 * np.log(2) / Fn**2) * (t0 - xn) ** 2)
+        A += An * np.exp(-(4 * np.log(2) / Fn ** 2) * (t0 - xn) ** 2)
 
     IQ0 = A / max(A)
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
 
 def test_Q3():
     pulse = Pulse(type='Q3', pulse_time=1.200, time_step=0.01, amp=1)
@@ -487,7 +502,7 @@ def test_Q3():
 
     A = np.zeros_like(t0)
     for An, xn, Fn in zip(A0, x0, FWHM):
-        A += An * np.exp(-(4 * np.log(2) / Fn**2) * (t0 - xn) ** 2)
+        A += An * np.exp(-(4 * np.log(2) / Fn ** 2) * (t0 - xn) ** 2)
 
     IQ0 = A / max(A)
 
@@ -510,8 +525,8 @@ def test_Q5():
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
 
-def test_gaussian_cascade():
 
+def test_gaussian_cascade():
     pulse = Pulse(type='gaussian_cascade',
                   pulse_time=1.200,
                   time_step=0.01,
@@ -544,7 +559,7 @@ def test_I_BURP1():
 
     A = np.zeros_like(t0) + A0
     for i, (an, bn) in enumerate(zip(An, Bn)):
-        j = i+1
+        j = i + 1
         A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
              bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
 
@@ -552,6 +567,7 @@ def test_I_BURP1():
     IQ0 = A / max(A)
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
 
 def test_I_BURP2():
     pulse = Pulse(pulse_time=0.700, type='I_BURP2', time_step=0.001, amp=1)
@@ -562,7 +578,7 @@ def test_I_BURP2():
 
     A = np.zeros_like(t0) + A0
     for i, (an, bn) in enumerate(zip(An, Bn)):
-        j = i+1
+        j = i + 1
         A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
              bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
 
@@ -581,7 +597,7 @@ def test_SNOB_i2():
 
     A = np.zeros_like(t0) + A0
     for i, (an, bn) in enumerate(zip(An, Bn)):
-        j = i+1
+        j = i + 1
         A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
              bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
 
@@ -600,7 +616,7 @@ def test_SNOB_i3():
 
     A = np.zeros_like(t0) + A0
     for i, (an, bn) in enumerate(zip(An, Bn)):
-        j = i+1
+        j = i + 1
         A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
              bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
 
@@ -608,6 +624,7 @@ def test_SNOB_i3():
     IQ0 = A / max(A)
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
 
 def test_fourier_series():
     pulse = Pulse(pulse_time=2.00,
@@ -615,13 +632,13 @@ def test_fourier_series():
                   time_step=0.001,
                   amp=1,
                   A0=0.308,
-                  An=[1.017, -0.480, -1.033, 0.078, 0.103, 0.109,  0.027, -0.043, -0.018, 0.000, 0.005,  0.004],
-                  Bn=[-0.384, -1.894, 0.574, 0.409, 0.098, 0.009, -0.079, -0.024,  0.014, 0.010, 0.003, -0.001])
+                  An=[1.017, -0.480, -1.033, 0.078, 0.103, 0.109, 0.027, -0.043, -0.018, 0.000, 0.005, 0.004],
+                  Bn=[-0.384, -1.894, 0.574, 0.409, 0.098, 0.009, -0.079, -0.024, 0.014, 0.010, 0.003, -0.001])
 
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
     A = np.zeros_like(t0) + pulse.A0
     for i, (an, bn) in enumerate(zip(pulse.An, pulse.Bn)):
-        j = i+1
+        j = i + 1
         A += an * np.cos(j * 2 * np.pi * t0 / pulse.pulse_time) + \
              bn * np.sin(j * 2 * np.pi * t0 / pulse.pulse_time)
 
@@ -629,6 +646,7 @@ def test_fourier_series():
     IQ0 = A / max(A)
 
     np.testing.assert_almost_equal(pulse.IQ, IQ0)
+
 
 def test_userIQ():
     pulse = Pulse(type='sech/tanh', pulse_time=0.200, freq=[120, 0], beta=10.6, Qcrit=5, time_step=5e-4)
@@ -651,9 +669,10 @@ def test_userIQ():
     pulse2 = Pulse(pulse_time=0.200, I=IQ0.real, Q=IQ0.imag, time_step=pulse.time_step)
     np.testing.assert_almost_equal(pulse2.IQ, pulse.IQ)
 
+
 def test_exciteprofile1():
-    p1 = Pulse(flip=np.pi/2, pulse_time=0.016, phase=np.pi/2)
-    p2 = Pulse(flip=np.pi, pulse_time=0.032, phase=np.pi/2)
+    p1 = Pulse(flip=np.pi / 2, pulse_time=0.016, phase=np.pi / 2)
+    p2 = Pulse(flip=np.pi, pulse_time=0.032, phase=np.pi / 2)
     offsets = np.arange(-70, 70.5, 0.5)
     p1.exciteprofile(offsets)
     p2.exciteprofile(offsets)
@@ -664,7 +683,7 @@ def test_exciteprofile1():
 
         H = np.einsum('i,jk->ijk', offsets, Sz) + (Amplitude * Sy)[None, :]
         M = -2j * np.pi * H * p.pulse_time
-        q = np.sqrt(M[:, 0, 0]**2 - np.abs(M[:, 0, 1])**2)
+        q = np.sqrt(M[:, 0, 0] ** 2 - np.abs(M[:, 0, 1]) ** 2)
         coshterm = np.einsum('i,jk->ijk', np.cosh(q), np.eye(2))
 
         U = coshterm + (np.sinh(q) / q)[:, None, None] * M
@@ -679,7 +698,7 @@ def test_exciteprofile1():
         np.testing.assert_almost_equal(My, p.My)
         np.testing.assert_almost_equal(Mz, p.Mz)
 
-from time import time
+
 def test_exciteprofile2():
     p1 = Pulse(type='sinc', flip=np.pi, pulse_time=0.2, zerocross=0.05)
 
@@ -689,57 +708,55 @@ def test_exciteprofile2():
 
     np.testing.assert_almost_equal(Mz, p1.Mz)
 
+
 def test_exciteprofile3():
     p1 = Pulse(type='sech/tanh', flip=np.pi, pulse_time=0.2, time_step=5e-4, freq=[110, 10], beta=15)
     p1.exciteprofile()
 
     Mz = np.loadtxt('data/Mz2.csv', delimiter=',')
 
-    import matplotlib.pyplot as plt
-    plt.plot(p1.offsets, p1.Mz)
-    plt.plot(p1.offsets, Mz)
-    plt.show()
-
     np.testing.assert_almost_equal(Mz, p1.Mz, decimal=3)
 
-def test_exciteprofile4():
 
+def test_exciteprofile4():
+    # TODO: Turn into a real test.
     p1 = Pulse(flip=np.pi, pulse_time=0.012, time_step=5e-4, M0=[0, 0, 1], trajectory=True)
     p2 = Pulse(flip=np.pi, pulse_time=0.012, time_step=5e-4, M0=[0, 0, 1], trajectory=True)
+
     p2.IQ = p2.IQ.imag + 1j * p2.IQ.real
 
     p1.exciteprofile(offsets=0)
     p2.exciteprofile(offsets=0)
 
-    import matplotlib.pyplot as plt
-    from mpl_toolkits.mplot3d import Axes3D
-    fig = plt.figure(figsize=(4, 4))
+    # import matplotlib.pyplot as plt
+    # from mpl_toolkits.mplot3d import Axes3D
+    # fig = plt.figure(figsize=(4, 4))
+    #
+    # ax = fig.add_subplot(111, projection='3d')
+    #
+    # ax.scatter(p1.Mx[0], p1.My[0], p1.Mz[0], c=p1.time, cmap='viridis')
+    # ax.scatter(p2.Mx[0], p2.My[0], p2.Mz[0], c=p1.time, cmap='viridis')
+    #
+    # plt.show()
+    #
+    # plt.title('p1')
+    # plt.plot(p1.IQ.real)
+    # plt.plot(p1.IQ.imag)
+    # plt.show()
+    #
+    # plt.title('p2')
+    # plt.plot(p2.IQ.real)
+    # plt.plot(p2.IQ.imag)
+    # plt.show()
 
-    ax = fig.add_subplot(111, projection='3d')
-
-    ax.scatter(p1.Mx[0], p1.My[0], p1.Mz[0], c=p1.time, cmap='viridis')
-    ax.scatter(p2.Mx[0], p2.My[0], p2.Mz[0], c=p1.time, cmap='viridis')
-
-    plt.show()
-
-
-    plt.title('p1')
-    plt.plot(p1.IQ.real)
-    plt.plot(p1.IQ.imag)
-    plt.show()
-
-    plt.title('p2')
-    plt.plot(p2.IQ.real)
-    plt.plot(p2.IQ.imag)
-    plt.show()
 
 def test_excite_userIQ():
     dt = 1e-3
     tp = 8e-3
-    v1 = ((np.pi/2)/tp)/(2*np.pi)
+    v1 = ((np.pi / 2) / tp) / (2 * np.pi)
     I = np.ones(int(6 * tp / dt) + 1)
-    I[int(tp/dt):int(3*tp/dt)] *= -1
-    pulse = Pulse(pulse_time=6*tp, I=v1*I)
+    I[int(tp / dt):int(3 * tp / dt)] *= -1
+    pulse = Pulse(pulse_time=6 * tp, I=v1 * I)
     pulse.exciteprofile()
 
     Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
