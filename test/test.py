@@ -691,11 +691,47 @@ def test_exciteprofile2():
 
 def test_exciteprofile3():
     p1 = Pulse(type='sech/tanh', flip=np.pi, pulse_time=0.2, time_step=5e-4, freq=[110, 10], beta=15)
-
     p1.exciteprofile()
+
     Mz = np.loadtxt('data/Mz2.csv', delimiter=',')
 
+    import matplotlib.pyplot as plt
+    plt.plot(p1.offsets, p1.Mz)
+    plt.plot(p1.offsets, Mz)
+    plt.show()
+
     np.testing.assert_almost_equal(Mz, p1.Mz, decimal=3)
+
+def test_exciteprofile4():
+
+    p1 = Pulse(flip=np.pi, pulse_time=0.012, time_step=5e-4, M0=[0, 0, 1], trajectory=True)
+    p2 = Pulse(flip=np.pi, pulse_time=0.012, time_step=5e-4, M0=[0, 0, 1], trajectory=True)
+    p2.IQ = p2.IQ.imag + 1j * p2.IQ.real
+
+    p1.exciteprofile(offsets=0)
+    p2.exciteprofile(offsets=0)
+
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    fig = plt.figure(figsize=(4, 4))
+
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.scatter(p1.Mx[0], p1.My[0], p1.Mz[0], c=p1.time, cmap='viridis')
+    ax.scatter(p2.Mx[0], p2.My[0], p2.Mz[0], c=p1.time, cmap='viridis')
+
+    plt.show()
+
+
+    plt.title('p1')
+    plt.plot(p1.IQ.real)
+    plt.plot(p1.IQ.imag)
+    plt.show()
+
+    plt.title('p2')
+    plt.plot(p2.IQ.real)
+    plt.plot(p2.IQ.imag)
+    plt.show()
 
 def test_excite_userIQ():
     dt = 1e-3

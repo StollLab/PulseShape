@@ -43,6 +43,8 @@ class Pulse:
 
         # Copy input args in case needed
         self.inp_kwargs = kwargs.copy()
+        self.trajectory = kwargs.get('trajectory', False)
+        self.M0 = kwargs.get('M0', [0, 0, 1])
 
         # Separate FM and AM shapes
         ntype = len(type.split('/'))
@@ -238,6 +240,10 @@ class Pulse:
         self.phase = self.phase + 2 * np.pi * np.mean(self.freq) * self.time + self.inp_phase
         self.IQ = self.amplitude_modulation * np.exp(1j * self.phase)
 
+        # If the pulse is told to be applied in the y axis
+        if self.inp_kwargs.get('axis', 'x') == 'y':
+            self.IQ = self.IQ.imag + 1j * self.IQ.real
+
     def estimate_timestep(self):
         """Estimate times step based off of Nyquist theorem"""
         if self.fm_func.__name__ == 'none':
@@ -335,5 +341,5 @@ class Pulse:
 
         # Calculate excitation profile
         self.offsets = np.atleast_1d(self.offsets)
-        self.Mx, self.My, self.Mz = pulse_propagation(self)
+        self.Mx, self.My, self.Mz = pulse_propagation(self, M0=self.M0, trajectory=self.trajectory)
 
