@@ -59,8 +59,6 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
     density0 = 0.5 * np.array(([[1 + M0[2], M0[0] - 1j * M0[1]],
                                 [M0[0] + 1j * M0[1], 1 - M0[2]]])).T
 
-    print(density0)
-
     dt = pulse.time[1] - pulse.time[0]
 
     H = pulse.offsets[:, None, None] * Sz
