@@ -341,5 +341,6 @@ class Pulse:
 
         # Calculate excitation profile
         self.offsets = np.atleast_1d(self.offsets)
-        self.Mx, self.My, self.Mz = pulse_propagation(self, M0=self.M0, trajectory=self.trajectory)
+        self.M = pulse_propagation(self, M0=self.M0, trajectory=self.trajectory)
+        self.Mx, self.My, self.Mz = np.moveaxis(self.M, -1, 0)
 

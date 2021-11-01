@@ -57,7 +57,7 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
 
     Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
     density0 = 0.5 * np.array(([[1 + M0[2], M0[0] - 1j * M0[1]],
-                                [M0[0] + 1j * M0[1], 1 - M0[2]]])).T
+                                [M0[0] + 1j * M0[1], 1 - M0[2]]]))
 
     dt = pulse.time[1] - pulse.time[0]
 
@@ -80,10 +80,10 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         density = np.einsum('ijk,kl,ilm->ijm', Upulses, density0, Upulses.conj().transpose((0, 2, 1)))
         density = density.transpose((0, 2, 1))
 
-        Mag = np.zeros((3, len(pulse.offsets)))
-        Mag[0] = 2 * (Sx[None, :, :] * density).sum(axis=(1, 2)).real
-        Mag[1] = 2 * (Sy[None, :, :] * density).sum(axis=(1, 2)).real
-        Mag[2] = 2 * (Sz[None, :, :] * density).sum(axis=(1, 2)).real
+        Mag = np.zeros((len(pulse.offsets), 3))
+        Mag[..., 0] = 2 * density[..., 0, 1].real             # 2 * (Sx[None, :, :] * density).sum(axis=(1, 2)).real
+        Mag[..., 1] = -2 * density[..., 1, 0].imag             # 2 * (Sy[None, :, :] * density).sum(axis=(1, 2)).real
+        Mag[..., 2] = density[..., 0, 0] - density[..., 1, 1] # 2 * (Sz[None, :, :] * density).sum(axis=(1, 2)).real
     else:
         Upulses = np.empty((len(dUs), len(pulse.time), 2, 2), dtype=complex)
         for i in range(len(dUs)):
@@ -92,11 +92,11 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         density = np.einsum('hijk,kl,hilm->hijm', Upulses, density0, Upulses.conj().transpose((0, 1, 3, 2)))
         density = density.transpose((0, 1, 3, 2))
 
-        Mag = np.zeros((3, len(pulse.offsets), len(pulse.time)))
-        Mag[0] = 2 * (Sx[None, None, :, :] * density).sum(axis=(2, 3)).real
-        Mag[1] = 2 * (Sy[None, None, :, :] * density).sum(axis=(2, 3)).real
-        Mag[2] = 2 * (Sz[None, None, :, :] * density).sum(axis=(2, 3)).real
+        Mag = np.zeros((len(pulse.offsets), len(pulse.time), 3))
+        Mag[..., 0] = 2 * density[..., 0, 1].real # 2 * (Sx[None, None, :, :] * density).sum(axis=(2, 3)).real
+        Mag[..., 1] = -2 * density[..., 1, 0].imag # 2 * (Sy[None, None, :, :] * density).sum(axis=(2, 3)).real
+        Mag[..., 2] = density[..., 0, 0] - density[..., 1, 1] # 2 * (Sz[None, None, :, :] * density).sum(axis=(2, 3)).real
 
 
 
-    return Mag
+    return np.squeeze(Mag * Mmag)
