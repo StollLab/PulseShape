@@ -97,7 +97,7 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         for i in range(len(dUs)):
             Upulses[i] = [np.eye(2)] +  list((accumulate(dUs[i, :-1], lambda x, y: y @ x)))
 
-        density = np.einsum('hijk,ikl,hilm->hijm', Upulses, density0, Upulses.conj().transpose((0, 1, 3, 2)))
+        density = np.einsum('hijk,hkl,hilm->hijm', Upulses, density0, Upulses.conj().transpose((0, 1, 3, 2)))
         density = density.transpose((0, 1, 3, 2))
 
         Mag = np.zeros((len(pulse.offsets), len(pulse.time), 3))

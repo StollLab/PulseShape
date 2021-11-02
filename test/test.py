@@ -793,3 +793,10 @@ def test_save_bruker():
     pulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], type='sech/tanh', beta=10, profile=profile)
 
     pulse.save_bruker('data/istmp.shp')
+
+def test_multiple_M0():
+    offsets = np.linspace(-50, 50, 3)
+    P1 = Pulse(pulse_time=0.016, flip=np.pi/2, offsets=offsets, trajectory=True)
+    P1.exciteprofile(offsets=offsets)
+    ans = np.load('data/multiple_M0.npy')
+    np.testing.assert_almost_equal(P1.M, ans)
