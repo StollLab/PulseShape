@@ -51,13 +51,20 @@ def sop(spins, comps):
 
 def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
     """Vectorization of solution pulse propagation"""
+
     M0 = np.asarray(M0, dtype=float)
-    Mmag = np.linalg.norm(M0)
-    M0 /= Mmag
+    if len(M0.shape) == 1:
+        Mmag = np.linalg.norm(M0)
+        M0 /= Mmag
+        M0 = np.tile(M0, (len(pulse.offsets), 1))
+    else:
+        M0 /= np.linalg.norm(M0, axis=1)
+
 
     Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
-    density0 = 0.5 * np.array(([[1 + M0[2], M0[0] - 1j * M0[1]],
-                                [M0[0] + 1j * M0[1], 1 - M0[2]]]))
+    density0 = 0.5 * np.array(([[1 + M0[:, 2], M0[:, 0] - 1j * M0[:, 1]],
+                                [M0[:, 0] + 1j * M0[:, 1], 1 - M0[:, 2]]]))
+    density0 = np.moveaxis(density0, 2, 0)
 
     dt = pulse.time[1] - pulse.time[0]
 
@@ -77,7 +84,7 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
             Upulses[i] = reduce(lambda x, y: y@x, dUs[i, :-1])
 
 
-        density = np.einsum('ijk,kl,ilm->ijm', Upulses, density0, Upulses.conj().transpose((0, 2, 1)))
+        density = np.einsum('ijk,ikl,ilm->ijm', Upulses, density0, Upulses.conj().transpose((0, 2, 1)))
         density = density.transpose((0, 2, 1))
 
         Mag = np.zeros((len(pulse.offsets), 3))
@@ -89,7 +96,7 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         for i in range(len(dUs)):
             Upulses[i] = [np.eye(2)] +  list((accumulate(dUs[i, :-1], lambda x, y: y @ x)))
 
-        density = np.einsum('hijk,kl,hilm->hijm', Upulses, density0, Upulses.conj().transpose((0, 1, 3, 2)))
+        density = np.einsum('hijk,ikl,hilm->hijm', Upulses, density0, Upulses.conj().transpose((0, 1, 3, 2)))
         density = density.transpose((0, 1, 3, 2))
 
         Mag = np.zeros((len(pulse.offsets), len(pulse.time), 3))
