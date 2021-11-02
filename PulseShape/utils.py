@@ -58,7 +58,8 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         M0 /= Mmag
         M0 = np.tile(M0, (len(pulse.offsets), 1))
     else:
-        M0 /= np.linalg.norm(M0, axis=1)
+        Mmag = np.linalg.norm(M0, axis=1)
+        M0 /= Mmag
 
 
     Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
