@@ -800,3 +800,8 @@ def test_multiple_M0():
     P1.exciteprofile(offsets=offsets)
     ans = np.load('data/multiple_M0.npy')
     np.testing.assert_almost_equal(P1.M, ans)
+
+def test_multiple_M02():
+    offsets = np.linspace(-50, 50, 10)
+    P1 = Pulse(pulse_time=0.016, flip=np.pi/2, offsets=offsets, trajectory=True)
+    P1.exciteprofile(offsets=offsets)
