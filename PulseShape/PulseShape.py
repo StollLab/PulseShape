@@ -120,6 +120,8 @@ class Pulse:
         if not hasattr(self, 'IQ'):
             self._compute_IQ()
 
+        self.exciteprofile()
+
     def _shape(self):
         """Calculate shape of amplitude and frequency modulations if IQ not provided by user, otherwise set the
         time domain"""
