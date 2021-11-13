@@ -120,7 +120,8 @@ class Pulse:
         if not hasattr(self, 'IQ'):
             self._compute_IQ()
 
-        self.exciteprofile()
+        if kwargs.get('exciteprofile', True):
+            self.exciteprofile()
 
     def _shape(self):
         """Calculate shape of amplitude and frequency modulations if IQ not provided by user, otherwise set the
@@ -257,7 +258,7 @@ class Pulse:
         dt = 1e-4
         tpulse = Pulse(time_step=dt, pulse_time=self.pulse_time, flip=self.flip, amp=1,
                        mwFreq=self.mwFreq, Qcrit=self.Qcrit, freq=self.freq,
-                       phase=self.inp_phase, type=self.type, **self.inp_kwargs)
+                       phase=self.inp_phase, type=self.type, exciteprofile=False, **self.inp_kwargs)
 
         if nextpow2(len(tpulse.time)) < 10:
             zf = 2 ** 10
