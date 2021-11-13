@@ -18,7 +18,8 @@ def test_bwcomp():
                   type='sech/tanh',
                   beta=10,
                   profile=profile,
-                  mwFreq=33.80)
+                  mwFreq=33.80,
+                  exciteprofile=False)
 
     ans = np.genfromtxt("data/sechtanh.csv", delimiter=',')
     ans = ans[:, 0] + 1j * ans[:, 1]
@@ -34,7 +35,8 @@ def test_bwcomp2():
                   amp=1,
                   type='quartersin/linear',
                   trise=0.030,
-                  oversample_factor=10)
+                  oversample_factor=10,
+                  exciteprofile=False)
 
     pulse2 = Pulse(pulse_time=0.128,
                    time_step=0.00001,
@@ -46,7 +48,8 @@ def test_bwcomp2():
                    amp=1,
                    type='quartersin/linear',
                    trise=0.030,
-                   oversample_factor=10)
+                   oversample_factor=10,
+                  exciteprofile=False)
 
     f0 = np.arange(9, 10 + 1e-5, 1e-5)
     H = 1 / (1 + 1j * pulse2.resonator_ql * (f0 / pulse2.resonator_frequency - pulse2.resonator_frequency / f0))
@@ -87,7 +90,8 @@ def test_bwcomp3():
                   type='sech/tanh',
                   beta=10,
                   freq=[-100, 100],
-                  amp=1)
+                  amp=1,
+                  exciteprofile=False)
 
     QL = 60
     f0 = np.arange(9.2, 9.5 + 1e-2, 1e-2)
@@ -101,7 +105,8 @@ def test_bwcomp3():
                    freq=[-100, 100],
                    amp=1,
                    mwFreq=9.34,
-                   profile=[f0, v1])
+                   profile=[f0, v1],
+                   exciteprofile=False)
 
     f = np.fft.fftshift(np.fft.fftfreq(len(pulse.time), np.diff(pulse.time).mean()))
 
