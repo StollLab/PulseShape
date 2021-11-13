@@ -429,9 +429,7 @@ def test_flip_am(pulse):
     tol = 1e-12
 
     p1 = Pulse(flip=np.pi / 2, offsets=offsets, **pulse)
-    p1.exciteprofile()
     p2 = Pulse(flip=np.pi, offsets=offsets, **pulse)
-    p2.exciteprofile()
     print(p1.Mz)
     assert np.all(p1.Mz < tol)
     assert np.all(p2.Mz > -1 - tol)
@@ -453,9 +451,7 @@ def test_flip_amfm(pulse):
     tol = 1e-2
 
     p1 = Pulse(flip=np.pi / 2, offsets=offsets, **pulse)
-    p1.exciteprofile()
     p2 = Pulse(flip=np.pi, offsets=offsets, **pulse)
-    p2.exciteprofile()
 
     print(p1.Mz)
     assert p1.Mz < tol
@@ -676,8 +672,8 @@ def test_userIQ():
 
 
 def test_exciteprofile1():
-    p1 = Pulse(flip=np.pi / 2, pulse_time=0.016, phase=np.pi / 2)
-    p2 = Pulse(flip=np.pi, pulse_time=0.032, phase=np.pi / 2)
+    p1 = Pulse(flip=np.pi / 2, pulse_time=0.016, phase=np.pi / 2, exciteprofile=False)
+    p2 = Pulse(flip=np.pi, pulse_time=0.032, phase=np.pi / 2, exciteprofile=False)
     offsets = np.arange(-70, 70.5, 0.5)
     p1.exciteprofile(offsets)
     p2.exciteprofile(offsets)
@@ -706,7 +702,6 @@ def test_exciteprofile1():
 
 def test_exciteprofile2():
     p1 = Pulse(type='sinc', flip=np.pi, pulse_time=0.2, zerocross=0.05)
-
     offsets = np.arange(-100, 101)
     p1.exciteprofile(offsets)
     Mz = np.loadtxt('data/Mz.csv', delimiter=',')
@@ -716,7 +711,6 @@ def test_exciteprofile2():
 
 def test_exciteprofile3():
     p1 = Pulse(type='sech/tanh', flip=np.pi, pulse_time=0.2, time_step=5e-4, freq=[110, 10], beta=15)
-    p1.exciteprofile()
 
     Mz = np.loadtxt('data/Mz2.csv', delimiter=',')
 
@@ -762,7 +756,6 @@ def test_excite_userIQ():
     I = np.ones(int(6 * tp / dt) + 1)
     I[int(tp / dt):int(3 * tp / dt)] *= -1
     pulse = Pulse(pulse_time=6 * tp, I=v1 * I)
-    pulse.exciteprofile()
 
     Sx, Sy, Sz = sop(0.5, ['x', 'y', 'z'])
 

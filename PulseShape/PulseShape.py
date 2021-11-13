@@ -19,7 +19,8 @@ class Pulse:
     """
 
     def __init__(self, pulse_time, time_step=None, flip=np.pi, mwFreq=33.80,
-                 amp=None, Qcrit=None, freq=0, phase=0, type='rectangular', **kwargs):
+                 amp=None, Qcrit=None, freq=0, phase=0, type='rectangular',
+                 exciteprofile=True, **kwargs):
         """
         :param pulse_time: float
             Length of pulse in us
@@ -120,7 +121,7 @@ class Pulse:
         if not hasattr(self, 'IQ'):
             self._compute_IQ()
 
-        if kwargs.get('exciteprofile', True):
+        if exciteprofile:
             self.exciteprofile()
 
     def _shape(self):
