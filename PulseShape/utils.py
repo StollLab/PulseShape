@@ -90,9 +90,9 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         density = density.transpose((0, 2, 1))
 
         Mag = np.zeros((len(pulse.offsets), 3))
-        Mag[..., 0] = 2 * density[..., 0, 1].real             # 2 * (Sx[None, :, :] * density).sum(axis=(1, 2)).real
+        Mag[..., 0] =  2 * density[..., 0, 1].real             # 2 * (Sx[None, :, :] * density).sum(axis=(1, 2)).real
         Mag[..., 1] = -2 * density[..., 1, 0].imag             # 2 * (Sy[None, :, :] * density).sum(axis=(1, 2)).real
-        Mag[..., 2] = density[..., 0, 0] - density[..., 1, 1] # 2 * (Sz[None, :, :] * density).sum(axis=(1, 2)).real
+        Mag[..., 2] =  density[..., 0, 0] - density[..., 1, 1] # 2 * (Sz[None, :, :] * density).sum(axis=(1, 2)).real
         return np.squeeze(Mag * Mmag[:, None])
     else:
         Upulses = np.empty((len(dUs), len(pulse.time), 2, 2), dtype=complex)
