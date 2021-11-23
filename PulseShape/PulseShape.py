@@ -2,7 +2,7 @@ import numpy as np
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
 from .modulations import AmplitudeModulations, FrequencyModulations
-from .utils import sop, pulse_propagation
+from .utils import sop, pulse_propagation, transmitter
 
 
 def nextpow2(x):
@@ -348,3 +348,5 @@ class Pulse:
         self.M = pulse_propagation(self, M0=self.M0, trajectory=self.trajectory)
         self.Mx, self.My, self.Mz = np.moveaxis(self.M, -1, 0)
 
+    def transmitter(self, Ain, Aout):
+        self.IQ = transmitter(self.IQ, Ain, Aout, task='compensate')

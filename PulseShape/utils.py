@@ -2,6 +2,7 @@ from functools import reduce
 from itertools import accumulate
 import numpy as np
 from scipy.sparse import csr_matrix, kron
+from scipy.interpolate import interp1d
 
 
 def sop(spins, comps):
@@ -108,3 +109,30 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         Mag[..., 2] = density[..., 0, 0] - density[..., 1, 1] # 2 * (Sz[None, None, :, :] * density).sum(axis=(2, 3)).real
 
         return np.squeeze(Mag * Mmag[:, None, None])
+
+def transmitter(signal, Ain, Aout, task='simulate', n=4):
+    Ain, Aout = Ain.copy(), Aout.copy()
+
+    # Fit data to get noiseless Aout
+    V = [Ain]
+    for i in range(n-2):
+        V.insert(0, Ain * V[0])
+    V = np.asarray(V).T
+
+    coeff = np.linalg.lstsq(V, Aout)
+    coeff = np.concatenate([coeff[0],  [0]])
+
+    Aout = np.polyval(coeff, Ain)
+
+    # Calculate nonlinearity
+    if task.lower() == 'simulate':
+        F = interp1d(Ain, Aout, kind='cubic')
+    elif task.lower() == 'compensate':
+        F = interp1d(Aout, Ain, kind='cubic')
+    else:
+        raise ValueError('`task` must be either simulate or compensate')
+
+    signal = np.sign(signal.real) * F(np.abs(signal.real)) + \
+             1j * np.sign(signal.imag) * F(np.abs(signal.imag))
+
+    return signal
