@@ -304,7 +304,7 @@ class Pulse:
         # Ensure shape number is acceptable
         if not 10 <= shape_number <=1_000_000:
             raise ValueError('Shape number must be between 10 and 6,000,000')
-        
+
 
         # Normalize IQ
         IQ = self.IQ / self.IQ.max()

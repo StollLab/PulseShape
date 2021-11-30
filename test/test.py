@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
-from PulseShape import Pulse, sop
+from PulseShape import Pulse, sop, transmitter
 import pytest
 
 sigma2fwhm = 2.35482004503
@@ -20,7 +20,6 @@ def test_bwcomp():
                   profile=profile,
                   mwFreq=33.80,
                   exciteprofile=False)
-
     ans = np.genfromtxt("data/sechtanh.csv", delimiter=',')
     ans = ans[:, 0] + 1j * ans[:, 1]
     np.testing.assert_almost_equal(pulse.IQ, ans)
@@ -803,3 +802,28 @@ def test_multiple_M02():
     offsets = np.linspace(-50, 50, 10)
     P1 = Pulse(pulse_time=0.016, flip=np.pi/2, offsets=offsets, trajectory=True)
     P1.exciteprofile(offsets=offsets)
+
+def test_accumulate_M():
+    P1 = Pulse(pulse_time=0.300,
+               time_step=1e-4,
+               flip=np.pi,
+               freq=[-40, 40],
+               type='sech/tanh',
+               beta=10,
+               offsets=np.linspace(-50, 50, 201),
+               trajectory=True)
+
+    ans = np.load('data/test_accumulate.npy')
+    np.testing.assert_allclose(P1.M, ans)
+
+def test_transmitter_compression():
+    nu1_max = 15
+    P1 = Pulse(type='sech/none', time_step=2.5e-4, pulse_time=0.2, beta=10, amp=nu1_max)
+
+    InputAmplitude = 0.75
+    Ain = np.linspace(0, 1, 1001)
+    Aout = nu1_max * (Ain - 0.30 * Ain**3)
+    IQ_compressed = transmitter(InputAmplitude * P1.IQ / P1.IQ.max(), Ain, Aout, 'simulate')
+    ans = np.load('data/IQcompressed.npy')
+
+    np.testing.assert_allclose(IQ_compressed, ans)
