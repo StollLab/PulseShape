@@ -215,7 +215,9 @@ class Pulse:
             self.amp = self.flip / (2 * np.pi * np.trapz(self.amplitude_modulation, self.time))
         else:
             if self.Qcrit is None:
-                self.Qcrit = (2 / np.pi) * np.log(2 / (1 + np.cos(self.flip)))
+                with np.seterr(divide='ignore'):
+                    self.Qcrit = (2 / np.pi) * np.log(2 / (1 + np.cos(self.flip)))
+                    
                 self.Qcrit = np.minimum(self.Qcrit, 5)
 
             if not hasattr(self, 'profile'):
