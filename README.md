@@ -44,8 +44,8 @@ profile = np.loadtxt('data/Transferfunction.dat')
 pulse = Pulse(pulse_time=0.150, 
               time_step=0.000625, 
               flip=np.pi, 
+              shape='sech/tanh', 
               freq=[40, 120], 
-              type='sech/tanh', 
               beta=10, 
               profile=profile)
 
@@ -118,15 +118,16 @@ profile = np.loadtxt('data/Transferfunction.dat')
 st_pulse = Pulse(pulse_time=0.150,
                  time_step=0.000625,
                  flip=np.pi,
+                 shape='sech/tanh',
                  freq=[40, 120],
-                 type='sech/tanh',
+
                  beta=10,
                  profile=profile)
 
 g_pulse = Pulse(pulse_time=0.06,
                 time_step=0.000625,
                 flip=np.pi,
-                type='gaussian',
+                shape='gaussian',
                 trunc=0.1)
 
 offsets = np.linspace(-20, 140, 256)
