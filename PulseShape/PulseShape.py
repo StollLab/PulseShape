@@ -14,32 +14,40 @@ eps = np.finfo(float).eps
 
 
 class Pulse:
-    """
-    A pulse object contains everything that needs to be known about a pulse.
-    """
+    """A pulse object contains everything that needs to be known about a pulse."""
 
-    def __init__(self, pulse_time, time_step=None, flip=np.pi, mwFreq=33.80,
-                 amp=None, Qcrit=None, freq=0, phase=0, type='rectangular',
+    def __init__(self, pulse_time, time_step=None, flip=np.pi, type='rectangular',
+                 mwFreq=33.80, amp=None, Qcrit=None, freq=0, phase=0,
                  exciteprofile=True, **kwargs):
         """
-        :param pulse_time: float
+
+        Parameters
+        ----------
+        pulse_time : float
             Length of pulse in us
-        :param time_step: float
-            Time increment in us
-        :param flip: float
-            Pulse flip angle
-        :param amp: float
-            Pulse maximum amplitude
-        :param Qcrit: float
-            Critcal adiabtacity
-        :param freq: float np.ndarray-lile
-            Pulse frequency offset/bandwidth.
-        :param phase: float
+        time_step : float
+            Time increment of pulse shape in us. Usually defined by the AWG time step. e.g. Bruker SpinJet time_step =
+            0.000625 (625 ns)
+        flip : float
+            Pulse flip angle in radians.
+        shape : str
+            Name of pulse shape as a string with either 'Amplitude/frequency' or just 'Amplitude'.
+        mwFreq : float
+            Microwave source base frequency in GHz.
+        amp : flaot
+            Pulse maximum amplitude in MHz.
+        Qcrit : float
+            Critical adiabtacity.
+        freq : float, Array-like
+            Pulse frequency offset/bandwidth in MHz.
+        phase : float
             Pulse Phase in radians.
-        :param type: str
-            amplitude/frequency modulation
-        :param kwargs: dict
-            Additional keyword arguments for specific pulse shapes
+        exciteprofile : Array-like
+            Resonator excitation profile. Matrix with the first row corresponding to the source frequency and the
+            second corresponding to
+        **kwargs : dict
+            Additional arguments necessary for Amplitude/Frequency modulation shapes. For a list of AM/FM functions and
+            their parameters run ``
         """
 
         # Copy input args in case needed
