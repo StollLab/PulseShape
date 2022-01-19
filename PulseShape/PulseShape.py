@@ -16,7 +16,7 @@ eps = np.finfo(float).eps
 class Pulse:
     """A pulse object contains everything that needs to be known about a pulse."""
 
-    def __init__(self, pulse_time, time_step=None, flip=np.pi, type='rectangular',
+    def __init__(self, pulse_time, time_step=None, flip=np.pi, shape='rectangular',
                  mwFreq=33.80, amp=None, Qcrit=None, freq=0, phase=0,
                  exciteprofile=True, **kwargs):
         """
@@ -56,15 +56,15 @@ class Pulse:
         self.M0 = kwargs.get('M0', [0, 0, 1])
 
         # Separate FM and AM shapes
-        ntype = len(type.split('/'))
+        nshape = len(shape.split('/'))
 
         # Check if user supplied IQ
         userIQ = True if any(x in kwargs for x in ['I', 'Q', 'IQ']) else False
 
         # if not, get the mod functions from dictionaries
         if not userIQ:
-            if ntype == 2:
-                am, fm = type.split('/')
+            if nshape == 2:
+                am, fm = shape.split('/')
                 if len(am.split('*')) == 1:
                     self.am_func, self.fm_func = AmplitudeModulations[am], FrequencyModulations[fm]
                 else:
@@ -73,9 +73,9 @@ class Pulse:
                         return np.prod([AmplitudeModulations[am](Pulse) for am in ams], axis=0)
                     self.am_func = t_func
                     self.fm_func = FrequencyModulations[fm]
-            # If only one type passed assume it is an am_func
-            elif ntype == 1:
-                self.am_func, self.fm_func = AmplitudeModulations[type], FrequencyModulations['none']
+            # If only one shape passed assume it is an am_func
+            elif nshape == 1:
+                self.am_func, self.fm_func = AmplitudeModulations[shape], FrequencyModulations['none']
             else:
                 raise ValueError('Pulse object accepts only one amplitude modulation and one frequency modulation')
 
@@ -90,7 +90,7 @@ class Pulse:
 
         # Assign misc variables
         self.inp_phase = phase
-        self.type = type
+        self.shape = shape
         self.n = kwargs.get('n', 1)
         self.mwFreq = mwFreq
         self.freq = freq
@@ -202,7 +202,7 @@ class Pulse:
         else:
             raise AttributeError('Pulse object must have `resonator_frequency` or `profile` defined in kwargs')
 
-        if self.fm_func.__name__ == 'uniformq' or self.type == 'sech/tanh':
+        if self.fm_func.__name__ == 'uniformq' or self.shape == 'sech/tanh':
             profile *= A0
 
         int = cumtrapz(profile ** -2, nu0, initial=0)
@@ -213,7 +213,7 @@ class Pulse:
         self.phase = 2 * np.pi * cumtrapz(self.frequency_modulation, self.time, initial=0)
         self.phase += np.abs(np.min(self.phase))
 
-        if self.fm_func.__name__ == 'uniformq' or self.type == 'sech/tanh':
+        if self.fm_func.__name__ == 'uniformq' or self.shape == 'sech/tanh':
             self.amplitude_modulation = pchip_interpolate(nu0, A0, nu_adapted)
 
     def _compute_flip_amp(self):
@@ -269,7 +269,7 @@ class Pulse:
         dt = 1e-4
         tpulse = Pulse(time_step=dt, pulse_time=self.pulse_time, flip=self.flip, amp=1,
                        mwFreq=self.mwFreq, Qcrit=self.Qcrit, freq=self.freq,
-                       phase=self.inp_phase, type=self.type, exciteprofile=False, **self.inp_kwargs)
+                       phase=self.inp_phase, shape=self.shape, exciteprofile=False, **self.inp_kwargs)
 
         if nextpow2(len(tpulse.time)) < 10:
             zf = 2 ** 10

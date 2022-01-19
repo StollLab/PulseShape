@@ -5,7 +5,7 @@ with open('README.md', 'r') as f:
 
 setup(
     name='PulseShape',
-    version='0.1.2',
+    version='0.1.2-1',
     packages=['PulseShape'],
     python_requires='>=3.6',
     install_requires=['numpy>=1.19', 'scipy>=1.5'],

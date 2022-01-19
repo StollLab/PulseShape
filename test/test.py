@@ -15,7 +15,7 @@ def test_bwcomp():
                   time_step=0.000625,
                   flip=np.pi,
                   freq=[40, 120],
-                  type='sech/tanh',
+                  shape='sech/tanh',
                   beta=10,
                   profile=profile,
                   mwFreq=33.80,
@@ -32,7 +32,7 @@ def test_bwcomp2():
                   freq=[-150, 150],
                   mwFreq=9.5,
                   amp=1,
-                  type='quartersin/linear',
+                  shape='quartersin/linear',
                   trise=0.030,
                   oversample_factor=10,
                   exciteprofile=False)
@@ -45,10 +45,10 @@ def test_bwcomp2():
                    resonator_frequency=9.5,
                    resonator_ql=50,
                    amp=1,
-                   type='quartersin/linear',
+                   shape='quartersin/linear',
                    trise=0.030,
                    oversample_factor=10,
-                  exciteprofile=False)
+                   exciteprofile=False)
 
     f0 = np.arange(9, 10 + 1e-5, 1e-5)
     H = 1 / (1 + 1j * pulse2.resonator_ql * (f0 / pulse2.resonator_frequency - pulse2.resonator_frequency / f0))
@@ -86,7 +86,7 @@ def test_bwcomp2():
 def test_bwcomp3():
     pulse = Pulse(pulse_time=0.200,
                   time_step=0.00001,
-                  type='sech/tanh',
+                  shape='sech/tanh',
                   beta=10,
                   freq=[-100, 100],
                   amp=1,
@@ -99,7 +99,7 @@ def test_bwcomp3():
 
     pulse2 = Pulse(pulse_time=0.200,
                    time_step=0.00001,
-                   type='sech/tanh',
+                   shape='sech/tanh',
                    beta=10,
                    freq=[-100, 100],
                    amp=1,
@@ -143,7 +143,7 @@ def test_estimate_timestep():
                   flip=np.pi,
                   freq=[-50, 50],
                   amp=20,
-                  type='quartersin/linear',
+                  shape='quartersin/linear',
                   trise=0.010,
                   oversample_factor=10)
     assert pulse.time_step == 1e-3
@@ -154,7 +154,7 @@ def test_linear_chirp():
                   time_step=0.0001,
                   flip=np.pi / 2,
                   freq=[60, 180],
-                  type='rectangular/linear')
+                  shape='rectangular/linear')
 
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
 
@@ -175,7 +175,7 @@ def test_quartersin_chirp():
                   flip=np.pi,
                   freq=[-50, 50],
                   amp=20,
-                  type='quartersin/linear',
+                  shape='quartersin/linear',
                   trise=0.010,
                   oversample_factor=10)
 
@@ -205,7 +205,7 @@ def test_halfsin_chirp():
                   flip=np.pi,
                   freq=[-50, 50],
                   amp=20,
-                  type='halfsin/linear',
+                  shape='halfsin/linear',
                   oversample_factor=10)
 
     BW = pulse.freq[1] - pulse.freq[0];
@@ -234,7 +234,7 @@ def test_gaussian_rd():
     pulse = Pulse(pulse_time=0.060,
                   time_step=0.000625,
                   flip=np.pi,
-                  type='gaussian',
+                  shape='gaussian',
                   profile=profile,
                   trunc=0.1)
 
@@ -257,7 +257,7 @@ def test_rectrangular():
 
 def test_sechtanh():
     pulse = Pulse(pulse_time=0.200,
-                  type='sech/tanh',
+                  shape='sech/tanh',
                   freq=[120, 0],
                   beta=10.6,
                   flip=np.pi,
@@ -286,7 +286,7 @@ def test_sechtanh():
 
 def test_gaussian():
     pulse = Pulse(pulse_time=0.200,
-                  type='gaussian',
+                  shape='gaussian',
                   tFWHM=0.064,
                   amp=((np.pi / 0.064) / (2 * np.pi)),
                   freq=100,
@@ -311,7 +311,7 @@ def test_gaussian2():
     IQ0 = A[ind[0]:ind[1] + 1]
 
     pulse = Pulse(pulse_time=np.round(t0[-1], 12),
-                  type='gaussian',
+                  shape='gaussian',
                   trunc=0.5,
                   time_step=dt,
                   amp=1)
@@ -321,7 +321,7 @@ def test_gaussian2():
 
 def test_WURST():
     pulse = Pulse(pulse_time=0.500,
-                  type='WURST/linear',
+                  shape='WURST/linear',
                   freq=[-150, 350],
                   amp=15,
                   nwurst=15)
@@ -343,7 +343,7 @@ def test_WURST():
 def test_higherordersech():
     pulse = Pulse(pulse_time=0.600,
                   time_step=0.0005,
-                  type='sech/uniformq',
+                  shape='sech/uniformq',
                   freq=[-100, 100],
                   beta=10.6,
                   n=8,
@@ -369,7 +369,7 @@ def test_higherordersech():
 
 def test_sinc():
     pulse = Pulse(pulse_time=0.200,
-                  type='sinc',
+                  shape='sinc',
                   zerocross=0.034,
                   time_step=0.001,
                   amp=1)
@@ -386,7 +386,7 @@ def test_sinc():
 def test_asymmetric_sech():
     pulse = Pulse(pulse_time=0.100,
                   time_step=5e-4,
-                  type='sech/uniformq',
+                  shape='sech/uniformq',
                   freq=[-100, 100],
                   beta=10.4,
                   n=[6, 1],
@@ -414,12 +414,12 @@ def test_asymmetric_sech():
     np.testing.assert_almost_equal(2 * np.pi * phi, pulse.phase)
 
 
-pulses1 = [{'pulse_time': 0.060, 'type': 'rectangular'},
-           {'pulse_time': 0.200, 'tFWHM': 0.060, 'type': 'gaussian'},
-           {'pulse_time': 0.200, 'zerocross': 0.050, 'type': 'sinc'},
-           {'pulse_time': 0.100, 'trise': 0.020, 'type': 'quartersin'},
-           {'pulse_time': 0.500, 'beta': 12, 'type': 'sech'},
-           {'pulse_time': 0.300, 'nwurst': 20, 'type': 'WURST'}]
+pulses1 = [{'pulse_time': 0.060, 'shape': 'rectangular'},
+           {'pulse_time': 0.200, 'tFWHM': 0.060, 'shape': 'gaussian'},
+           {'pulse_time': 0.200, 'zerocross': 0.050, 'shape': 'sinc'},
+           {'pulse_time': 0.100, 'trise': 0.020, 'shape': 'quartersin'},
+           {'pulse_time': 0.500, 'beta': 12, 'shape': 'sech'},
+           {'pulse_time': 0.300, 'nwurst': 20, 'shape': 'WURST'}]
 
 
 @pytest.mark.parametrize('pulse', pulses1)
@@ -436,12 +436,12 @@ def test_flip_am(pulse):
     assert np.all(p2.Mz < -1 + tol)
 
 
-pulses2 = [{'type': 'quartersin/linear', 'pulse_time': 0.200, 'trise': 0.050, 'freq': [-250, 250]},
-           {'type': 'WURST/linear', 'pulse_time': 0.200, 'nwurst': 30, 'freq': [150, -150]},
-           {'type': 'sech/tanh', 'pulse_time': 0.400, 'beta': 10, 'freq': [-35, 35]},
-           {'type': 'sech*WURST/tanh', 'pulse_time': 0.500, 'beta': 4, 'nwurst': 8, 'freq': [60, -60]},
-           {'type': 'sech/uniformq', 'pulse_time': 0.300, 'beta': 10, 'n': 4, 'freq': [-100, 100]},
-           {'type': 'sech/uniformq', 'pulse_time': 0.400, 'beta': 7, 'n': 12, 'freq': [-125, 125]}]
+pulses2 = [{'shape': 'quartersin/linear', 'pulse_time': 0.200, 'trise': 0.050, 'freq': [-250, 250]},
+           {'shape': 'WURST/linear', 'pulse_time': 0.200, 'nwurst': 30, 'freq': [150, -150]},
+           {'shape': 'sech/tanh', 'pulse_time': 0.400, 'beta': 10, 'freq': [-35, 35]},
+           {'shape': 'sech*WURST/tanh', 'pulse_time': 0.500, 'beta': 4, 'nwurst': 8, 'freq': [60, -60]},
+           {'shape': 'sech/uniformq', 'pulse_time': 0.300, 'beta': 10, 'n': 4, 'freq': [-100, 100]},
+           {'shape': 'sech/uniformq', 'pulse_time': 0.400, 'beta': 7, 'n': 12, 'freq': [-125, 125]}]
 
 
 @pytest.mark.parametrize('pulse', pulses2)
@@ -459,7 +459,7 @@ def test_flip_amfm(pulse):
 
 
 def test_G3():
-    pulse = Pulse(type='G3', pulse_time=0.800, time_step=0.001, amp=1)
+    pulse = Pulse(shape='G3', pulse_time=0.800, time_step=0.001, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
 
     A0 = np.array([-1, 1.37, 0.49])
@@ -476,7 +476,7 @@ def test_G3():
 
 
 def test_G4():
-    pulse = Pulse(type='G4', pulse_time=0.800, time_step=0.001, amp=1)
+    pulse = Pulse(shape='G4', pulse_time=0.800, time_step=0.001, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
 
     A0 = np.array([0.62, 0.72, -0.91, -0.33])
@@ -493,7 +493,7 @@ def test_G4():
 
 
 def test_Q3():
-    pulse = Pulse(type='Q3', pulse_time=1.200, time_step=0.01, amp=1)
+    pulse = Pulse(shape='Q3', pulse_time=1.200, time_step=0.01, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
 
     A0 = np.array([-4.39, 4.57, 2.60])
@@ -510,7 +510,7 @@ def test_Q3():
 
 
 def test_Q5():
-    pulse = Pulse(type='Q5', pulse_time=1.200, time_step=0.01, amp=1)
+    pulse = Pulse(shape='Q5', pulse_time=1.200, time_step=0.01, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
 
     A0 = np.array([-1.48, -4.34, 7.33, -2.30, 5.66])
@@ -527,7 +527,7 @@ def test_Q5():
 
 
 def test_gaussian_cascade():
-    pulse = Pulse(type='gaussian_cascade',
+    pulse = Pulse(shape='gaussian_cascade',
                   pulse_time=1.200,
                   time_step=0.01,
                   amp=1,
@@ -551,7 +551,7 @@ def test_gaussian_cascade():
 
 
 def test_I_BURP1():
-    pulse = Pulse(pulse_time=0.500, type='I_BURP1', time_step=0.001, amp=1)
+    pulse = Pulse(pulse_time=0.500, shape='I_BURP1', time_step=0.001, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
     A0 = 0.5
     An = [0.70, - 0.15, - 0.94, 0.11, -0.02, -0.04, 0.01, -0.02, -0.01]
@@ -570,7 +570,7 @@ def test_I_BURP1():
 
 
 def test_I_BURP2():
-    pulse = Pulse(pulse_time=0.700, type='I_BURP2', time_step=0.001, amp=1)
+    pulse = Pulse(pulse_time=0.700, shape='I_BURP2', time_step=0.001, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
     A0 = 0.5
     An = [0.81, 0.07, -1.25, -0.24, 0.07, 0.11, 0.05, -0.02, -0.03, -0.02, 0.00]
@@ -589,7 +589,7 @@ def test_I_BURP2():
 
 
 def test_SNOB_i2():
-    pulse = Pulse(pulse_time=0.200, type='SNOB_i2', time_step=0.001, amp=1)
+    pulse = Pulse(pulse_time=0.200, shape='SNOB_i2', time_step=0.001, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
     A0 = 0.5
     An = [-0.2687, -0.2972, 0.0989, -0.0010, -0.0168, 0.0009, -0.0017, -0.0013, -0.0014]
@@ -608,7 +608,7 @@ def test_SNOB_i2():
 
 
 def test_SNOB_i3():
-    pulse = Pulse(pulse_time=0.200, type='SNOB_i3', time_step=0.001, amp=1)
+    pulse = Pulse(pulse_time=0.200, shape='SNOB_i3', time_step=0.001, amp=1)
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
     A0 = 0.5
     An = [0.2801, -0.9995, 0.1928, 0.0967, -0.0480, -0.0148, 0.0088, -0.0002, -0.0030]
@@ -628,7 +628,7 @@ def test_SNOB_i3():
 
 def test_fourier_series():
     pulse = Pulse(pulse_time=2.00,
-                  type='fourier_series',
+                  shape='fourier_series',
                   time_step=0.001,
                   amp=1,
                   A0=0.308,
@@ -649,7 +649,7 @@ def test_fourier_series():
 
 
 def test_userIQ():
-    pulse = Pulse(type='sech/tanh', pulse_time=0.200, freq=[120, 0], beta=10.6, Qcrit=5, time_step=5e-4)
+    pulse = Pulse(shape='sech/tanh', pulse_time=0.200, freq=[120, 0], beta=10.6, Qcrit=5, time_step=5e-4)
 
     dt = 0.0001
     t0 = np.arange(0, pulse.pulse_time + pulse.time_step, pulse.time_step)
@@ -700,7 +700,7 @@ def test_exciteprofile1():
 
 
 def test_exciteprofile2():
-    p1 = Pulse(type='sinc', flip=np.pi, pulse_time=0.2, zerocross=0.05)
+    p1 = Pulse(shape='sinc', flip=np.pi, pulse_time=0.2, zerocross=0.05)
     offsets = np.arange(-100, 101)
     p1.exciteprofile(offsets)
     Mz = np.loadtxt('data/Mz.csv', delimiter=',')
@@ -709,7 +709,7 @@ def test_exciteprofile2():
 
 
 def test_exciteprofile3():
-    p1 = Pulse(type='sech/tanh', flip=np.pi, pulse_time=0.2, time_step=5e-4, freq=[110, 10], beta=15)
+    p1 = Pulse(shape='sech/tanh', flip=np.pi, pulse_time=0.2, time_step=5e-4, freq=[110, 10], beta=15)
 
     Mz = np.loadtxt('data/Mz2.csv', delimiter=',')
 
@@ -787,7 +787,7 @@ def test_excite_userIQ():
 def test_save_bruker():
     profile = np.loadtxt('data/Transferfunction.dat').T
 
-    pulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], type='sech/tanh', beta=10, profile=profile)
+    pulse = Pulse(0.150, 0.000625, np.pi, freq=[40, 120], shape='sech/tanh', beta=10, profile=profile)
 
     pulse.save_bruker('data/istmp.shp')
 
@@ -808,7 +808,7 @@ def test_accumulate_M():
                time_step=1e-4,
                flip=np.pi,
                freq=[-40, 40],
-               type='sech/tanh',
+               shape='sech/tanh',
                beta=10,
                offsets=np.linspace(-50, 50, 201),
                trajectory=True)
@@ -818,7 +818,7 @@ def test_accumulate_M():
 
 def test_transmitter_compression():
     nu1_max = 15
-    P1 = Pulse(type='sech/none', time_step=2.5e-4, pulse_time=0.2, beta=10, amp=nu1_max)
+    P1 = Pulse(shape='sech/none', time_step=2.5e-4, pulse_time=0.2, beta=10, amp=nu1_max)
 
     InputAmplitude = 0.75
     Ain = np.linspace(0, 1, 1001)
