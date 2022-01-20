@@ -1,4 +1,5 @@
 from functools import reduce
+from pathlib import Path
 from itertools import accumulate
 import numpy as np
 from scipy.sparse import csr_matrix, kron
@@ -136,3 +137,133 @@ def transmitter(signal, Ain, Aout, task='simulate', n=4):
              1j * np.sign(signal.imag) * F(np.abs(signal.imag))
 
     return signal
+
+def transmitter_profile(file_name):
+    f = Path(file_name)
+
+    if f.suffix in ('.DTA', '.DSC'):
+        DTA_file = f.with_suffix('.DTA')
+        DSC_file = f.with_suffix('.DSC')
+    else:
+        raise ValueError('file_name must be a Bruker DTA or DSC file')
+
+    param_dict = read_param_file(str(DSC_file))
+
+    # Calculate time axis data from experimental params
+    x_points = int(param_dict['XPTS'][0])
+    x_min = float(param_dict['XMIN'][0])
+    x_width = float(param_dict['XWID'][0])
+    x_max = x_min + x_width
+    x_axis = np.linspace(x_min, x_max, x_points )
+
+    y_points = int(param_dict['YPTS'][0])
+    y_min = float(param_dict['YMIN'][0]) + 1
+    y_width = float(param_dict['YWID'][0])
+    y_max = y_min + y_width
+    y_axis = np.linspace(y_min, y_max, y_points )
+
+    # Read spec data
+    data = np.fromfile(str(DTA_file), dtype='>d')
+
+    # Reshape and form complex array
+    data.shape = (-1, 2)
+    data = data[:, 0] + 1j * data[:, 1]
+
+    # Reshape to a 2D matrix
+    data.shape = (y_points, -1)
+
+    # Correct Phase
+    data = opt_phase(data)
+
+    tau = 200  # ns
+    N = 2 ** 14  # Zero Padding
+    ts, Vs = [], []
+    ffts, fft_freqs = [], []
+    freqs, nu = [], []
+
+    for i, V in enumerate(data):
+
+        V = V.copy() - V.mean()
+        ts.append(x_axis * 1e3), Vs.append(V)
+
+        # Apply window and padding
+        window = np.exp(-x_axis / tau)
+        nutation_win = window * V
+
+        NWpad = np.zeros(N)
+        NWpad[:len(nutation_win)] = nutation_win
+
+        # Get FFT and frequency
+        ft = np.fft.fftshift(np.fft.rfft(NWpad))
+        dt = np.median(np.diff(x_axis))
+        f = np.fft.fftshift(np.fft.rfftfreq(N, dt))
+
+        ffts.append(ft.real)
+        fft_freqs.append(f.real)
+
+        # Return FeqMax
+        idxmax = np.argmax(ft.real)
+        nu.append(f[idxmax])
+
+    # Convert Ghz to MHz
+    nu = np.asarray(nu) * 1e3
+    return y_axis, nu
+
+
+def read_param_file(param_file):
+    param_dict = {}
+    with open(param_file, 'r') as file:
+        for line in file:
+            # Skip blank lines and lines with comment chars
+            if line.startswith(("*", "#", "\n")):
+                continue
+
+            # Add keywords to param_dict
+            line = line.split()
+            try:
+                key = line.pop(0)
+                val = [arg.strip() for arg in line]
+            except IndexError:
+                key = line
+                val = None
+
+            if key:
+                param_dict[key] = val
+
+    return param_dict
+
+
+def get_imag_norms_squared(phi, V):
+    V_imag = np.imag(V[:, None] * np.exp(1j * phi)[None, :, None])
+
+    return (V_imag * V_imag).sum(-1)
+
+
+def opt_phase(V, return_params=False):
+
+    V = np.atleast_2d(V)
+
+    # Calculate 3 points of cost function which should be a smooth continuous sine wave
+    phis = np.array([0, np.pi / 2, np.pi]) / 2
+    costs = get_imag_norms_squared(phis, V)
+
+    # Calculate sine function fitting 3 points
+    offset = (costs[:, 0] + costs[:, 2]) / 2
+    phase_shift = np.arctan2(costs[:, 0] - offset, costs[:, 1] - offset)
+
+    # Calculate phi by calculating the phase when the derivative of the sine function is 0 and using the second
+    # derivative to ensure it is a minima and not a maxima
+    possible_phis = np.array([(np.pi / 2 - phase_shift) / 2, (3 * np.pi / 2 - phase_shift) / 2]).T
+    second_deriv = -np.sin(2 * possible_phis + phase_shift[:, None])
+    opt_phase = possible_phis[second_deriv > 0]
+
+    # Check to ensure the real component is positive
+    temp_V = V * np.exp(1j * opt_phase)[:, None]
+    opt_phase[temp_V.sum(axis=1) < 0] += np.pi
+    V = V * np.exp(1j * opt_phase)[:, None]
+
+    if return_params:
+        return np.squeeze(V), np.squeeze(opt_phase)
+    else:
+        return np.squeeze(V)
+

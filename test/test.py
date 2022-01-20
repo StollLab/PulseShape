@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy.interpolate import interp1d, pchip_interpolate
 from scipy.integrate import cumtrapz
-from PulseShape import Pulse, sop, transmitter
+from PulseShape import Pulse, sop, transmitter, transmitter_profile
 import pytest
 
 sigma2fwhm = 2.35482004503
@@ -827,3 +827,13 @@ def test_transmitter_compression():
     ans = np.load('data/IQcompressed.npy')
 
     np.testing.assert_allclose(IQ_compressed, ans)
+
+def test_transmitter_profile():
+    x, y = transmitter_profile('data/transmitter_profile.DTA')
+
+    with np.load('data/transmitter_profile.npz') as f:
+        amp_ans = f['amp']
+        response_ans = f['response']
+
+    np.testing.assert_almost_equal(x, amp_ans)
+    np.testing.assert_almost_equal(y, response_ans)
