@@ -212,7 +212,7 @@ def transmitter_profile(file_name):
 
 def read_param_file(param_file):
     param_dict = {}
-    with open(param_file, 'r') as file:
+    with open(param_file, 'r', encoding='latin-1') as file:
         for line in file:
             # Skip blank lines and lines with comment chars
             if line.startswith(("*", "#", "\n")):
