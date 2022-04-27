@@ -364,4 +364,5 @@ class Pulse:
         self.Mx, self.My, self.Mz = np.moveaxis(self.M, -1, 0)
 
     def transmitter(self, Ain, Aout):
-        self.IQ = transmitter(self.IQ, Ain, Aout, task='compensate')
+        normalized_IQ = self.IQ / np.max([self.IQ.real.max(), self.IQ.imag.max()])
+        self.IQ = transmitter(normalized_IQ, Ain, Aout, task='compensate') * self.amp
