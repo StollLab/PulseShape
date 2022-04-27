@@ -317,7 +317,7 @@ class Pulse:
 
 
         # Normalize IQ
-        IQ = self.IQ / self.IQ.max()
+        IQ = self.IQ / self.amp
 
         # Write file
         fshort = filename.split('/')[-1]
