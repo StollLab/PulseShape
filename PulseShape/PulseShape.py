@@ -138,7 +138,7 @@ class Pulse:
 
         # Check if IQ provided by user and determine if I, Q or IQ were passed
         if any(x in self.__dict__ for x in ['I', 'Q', 'IQ']):
-            lenIQ = [len(self.__dict__[X]) for X in ['I', 'Q'] if X in self.__dict__][0]
+            lenIQ = [len(self.__dict__[X]) for X in ['I', 'Q', 'IQ'] if X in self.__dict__][0]
             IQ = self.__dict__.get('IQ', None)
             if IQ is None:
                 Q = self.__dict__.get('Q', np.zeros(lenIQ))

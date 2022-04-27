@@ -4,7 +4,7 @@ from itertools import accumulate
 import numpy as np
 from scipy.sparse import csr_matrix, kron
 from scipy.interpolate import interp1d
-
+import matplotlib.pyplot as plt
 
 def sop(spins, comps):
     spins = np.atleast_1d(spins)
@@ -112,8 +112,8 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
         return np.squeeze(Mag * Mmag[:, None, None])
 
 def transmitter(signal, Ain, Aout, task='simulate', n=4):
+    Ainori, Aoutori = Ain, Aout
     Ain, Aout = Ain.copy(), Aout.copy()
-
     # Fit data to get noiseless Aout
     V = [Ain]
     for i in range(n-2):
@@ -122,14 +122,15 @@ def transmitter(signal, Ain, Aout, task='simulate', n=4):
 
     coeff = np.linalg.lstsq(V, Aout)
     coeff = np.concatenate([coeff[0],  [0]])
-
+    Ain = np.linspace(0, 100, 256)
     Aout = np.polyval(coeff, Ain)
 
     # Calculate nonlinearity
     if task.lower() == 'simulate':
-        F = interp1d(Ain, Aout, kind='cubic')
+        F = interp1d(Ain, Aout, kind='cubic', fill_value='extrapolate')
+
     elif task.lower() == 'compensate':
-        F = interp1d(Aout, Ain, kind='cubic')
+        F = interp1d(Aout, Ain, kind='cubic', fill_value='extrapolate')
     else:
         raise ValueError('`task` must be either simulate or compensate')
 
