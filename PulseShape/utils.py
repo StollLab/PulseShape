@@ -113,16 +113,14 @@ def pulse_propagation(pulse, M0=[0, 0, 1], trajectory=False):
 
 def transmitter(signal, Ain, Aout, task='simulate', n=4):
     Ainori, Aoutori = Ain, Aout
-    Ain, Aout = Ain.copy(), Aout.copy()
+    Ain0, Aout0 = Ain.copy(), Aout.copy() 
+    
     # Fit data to get noiseless Aout
-    V = [Ain]
-    for i in range(n-2):
-        V.insert(0, Ain * V[0])
-    V = np.asarray(V).T
+    M = np.vstack([Ain0 ** n for n in range(n, 0, -1)]).T
+    coeff = np.linalg.lstsq(M, Aout0)[0]
+    coeff = np.concatenate([coeff,[0]]) 
 
-    coeff = np.linalg.lstsq(V, Aout)
-    coeff = np.concatenate([coeff[0],  [0]])
-    Ain = np.linspace(0, 100, 256)
+    Ain = np.linspace(0, 1, 256)
     Aout = np.polyval(coeff, Ain)
 
     # Calculate nonlinearity
@@ -130,9 +128,16 @@ def transmitter(signal, Ain, Aout, task='simulate', n=4):
         F = interp1d(Ain, Aout, kind='cubic', fill_value='extrapolate')
 
     elif task.lower() == 'compensate':
-        F = interp1d(Aout, Ain, kind='cubic', fill_value='extrapolate')
+
+        Aout_comp, idx = np.unique(Aout, return_index=True)
+        Ain_comp = Ain[idx]
+
+        F = interp1d(Aout_comp, Ain_comp, kind='cubic', fill_value='extrapolate')
+
     else:
         raise ValueError('`task` must be either simulate or compensate')
+    
+    
 
     signal = np.sign(signal.real) * F(np.abs(signal.real)) + \
              1j * np.sign(signal.imag) * F(np.abs(signal.imag))
