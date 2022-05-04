@@ -5,10 +5,10 @@ with open('README.md', 'r') as f:
 
 setup(
     name='PulseShape',
-    version='0.1.3',
+    version='0.1.4',
     packages=['PulseShape'],
     python_requires='>=3.6',
-    install_requires=['numpy>=1.19', 'scipy>=1.5'],
+    install_requires=['numpy>=1.19', 'scipy>=1.5', 'matplotlib>=3.0'],
     url='https://gitlab.com/mtessmer/PulseShape',
     project_urls = {'Source': 'https://gitlab.com/mtessmer/PulseShape'},
     license='GNU GPLv3',
