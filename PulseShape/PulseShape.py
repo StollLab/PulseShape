@@ -214,7 +214,10 @@ class Pulse:
         self.phase += np.abs(np.min(self.phase))
 
         if self.fm_func.__name__ == 'uniformq' or self.shape == 'sech/tanh':
-            self.amplitude_modulation = pchip_interpolate(nu0, A0, nu_adapted)
+            if nu_adapted[0] > nu_adapted[-1]:
+                self.amplitude_modulation = pchip_interpolate(nu0[::-1], A0[::-1], nu_adapted[::-1])[::-1]
+            else:
+                self.amplitude_modulation = pchip_interpolate(nu0, A0, nu_adapted)
 
     def _compute_flip_amp(self):
         """Compute flip angle if not supplied by user"""
@@ -297,7 +300,7 @@ class Pulse:
 
         self.time_step = self.pulse_time / np.rint(self.pulse_time / self.time_step)
 
-    def save_bruker(self, filename, shape_number=10):
+    def save_bruker(self, filename, shape_number=10, maxamp=None):
         """
         Parameters
         ----------
@@ -306,6 +309,9 @@ class Pulse:
         shape_number : int
             Shape number to save. Must be larger than 9
         """
+
+        if maxamp is None:
+            maxamp = self.maxamp
 
         # Ensure file has correct prefix
         if filename[-4:] != '.shp':
@@ -317,7 +323,7 @@ class Pulse:
 
 
         # Normalize IQ
-        IQ = self.IQ / self.amp
+        IQ = self.IQ / maxamp
 
         # Write file
         fshort = filename.split('/')[-1]
@@ -363,6 +369,8 @@ class Pulse:
         self.M = pulse_propagation(self, M0=self.M0, trajectory=self.trajectory)
         self.Mx, self.My, self.Mz = np.moveaxis(self.M, -1, 0)
 
-    def transmitter(self, Ain, Aout):
+    def transmitter(self, Ain, Aout, maxamp):
+        if maxamp is None:
+            maxamp = self.amp
         normalized_IQ = self.IQ / np.max([self.IQ.real.max(), self.IQ.imag.max()])
-        self.IQ = transmitter(normalized_IQ, Ain, Aout, task='compensate') * self.amp
+        self.IQ = transmitter(normalized_IQ, Ain, Aout, task='compensate') * maxamp
