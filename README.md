@@ -13,7 +13,7 @@ PulseShape can be installed and updated using `pip`, the python package manager.
 ```bash
 pip install PulseShape
 ```
-PulseShape is tested to work on python 3.6-3.9. While one of the major purposes of PulseShape is to work on Linux systems, PulseShape works well on all systems (Windows, Mac and Linux) and only depends on numpy and scipy.
+PulseShape is tested to work on Python 3.6-3.9. While one of the major purposes of PulseShape is to work on Linux systems, PulseShape works well on all systems (Windows, Mac, and Linux) and only depends on numpy and scipy.
 
 Alternatively, PulseShape can be installed by downloading or cloning the git repository.
 
@@ -24,7 +24,7 @@ python setup.py install
 ```
 
 ## e580 Setup
-Instructions for setting up python and PulseShape on the Linux system that usually ships with e580 spectrometers coming soon.
+Instructions for setting up Python and PulseShape on the Linux system that usually ships with e580 spectrometers coming soon.
 
 ## Example: sech\tanh pulse with resonator compensation
 <table>
@@ -57,7 +57,7 @@ plt.ylabel('Amplitude')
 plt.legend()
 plt.show()
 ```
-<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/sechtanh.png" width="400"  class="center"/>
+<img src="https://github.com/StollLab/PulseShape/blob/main/img/sechtanh.png?raw=true" width="400"  class="center"/>
 
 
 </td>
@@ -107,7 +107,7 @@ set(gcf,'position',[x0,y0,width,height])
 
 ## Example: Working with multiple pulses
 
-All `time`, `IQ`, other paramters and data are stored withing the `Pulse` object itself so it's easy to work with multiple pulses
+All `time`, `IQ`, other parameters and data are stored within the `Pulse` object itself so it's easy to work with multiple pulses
 
 ```python
 import numpy as np
@@ -150,4 +150,4 @@ ax2.set_xlabel('Frequency Offset (MHz)')
 ax2.set_ylabel('Mz')
 plt.show()
 ```
-<img src="https://gitlab.com/StollLab/PulseShape/-/raw/master/img/g_st.png" width="800" class="center"/>
+<img src="https://github.com/StollLab/PulseShape/blob/main/img/g_st.png?raw=true" width="800" class="center"/>
