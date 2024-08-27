@@ -100,7 +100,7 @@ height=448;
 set(gcf,'position',[x0,y0,width,height])
 
 ```
-<img src="https://gitlab.com/StollLab/PulseShape/-/raw/master/img/sechtanhes.png" width="400" class="center"/>
+<img src="https://github.com/StollLab/PulseShape/blob/main/img/sechtanhes.png?raw=true" width="400" class="center"/>
 </td>
 </tr>
 </table>
