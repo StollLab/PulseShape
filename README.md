@@ -18,7 +18,7 @@ PulseShape is tested to work on python 3.6-3.9. While one of the major purposes 
 Alternatively, PulseShape can be installed by downloading or cloning the git repository.
 
 ```bash
-git clone https://gitlab.com/mtessmer/PulseShape.git
+git clone https://gitlab.com/StollLab/PulseShape.git
 cd PulseShape
 python setup.py install
 ```
@@ -100,7 +100,7 @@ height=448;
 set(gcf,'position',[x0,y0,width,height])
 
 ```
-<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/sechtanhes.png" width="400" class="center"/>
+<img src="https://gitlab.com/StollLab/PulseShape/-/raw/master/img/sechtanhes.png" width="400" class="center"/>
 </td>
 </tr>
 </table>
@@ -150,4 +150,4 @@ ax2.set_xlabel('Frequency Offset (MHz)')
 ax2.set_ylabel('Mz')
 plt.show()
 ```
-<img src="https://gitlab.com/mtessmer/PulseShape/-/raw/master/img/g_st.png" width="800" class="center"/>
+<img src="https://gitlab.com/StollLab/PulseShape/-/raw/master/img/g_st.png" width="800" class="center"/>
