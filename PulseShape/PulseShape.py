@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d, pchip_interpolate
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 from .modulations import AmplitudeModulations, FrequencyModulations
 from .utils import sop, pulse_propagation, transmitter
 
@@ -205,12 +205,12 @@ class Pulse:
         if self.fm_func.__name__ == 'uniformq' or self.shape == 'sech/tanh':
             profile *= A0
 
-        int = cumtrapz(profile ** -2, nu0, initial=0)
+        int = cumulative_trapezoid(profile ** -2, nu0, initial=0)
         tf = self.time[-1] * int / int[-1]
         nu_adapted = pchip_interpolate(tf, nu0, self.time)
 
         self.frequency_modulation = nu_adapted
-        self.phase = 2 * np.pi * cumtrapz(self.frequency_modulation, self.time, initial=0)
+        self.phase = 2 * np.pi * cumulative_trapezoid(self.frequency_modulation, self.time, initial=0)
         self.phase += np.abs(np.min(self.phase))
 
         if self.fm_func.__name__ == 'uniformq' or self.shape == 'sech/tanh':
@@ -223,7 +223,7 @@ class Pulse:
         """Compute flip angle if not supplied by user"""
 
         if self.fm_func.__name__ == 'none':
-            self.amp = self.flip / (2 * np.pi * np.trapz(self.amplitude_modulation, self.time))
+            self.amp = self.flip / (2 * np.pi * np.trapezoid(self.amplitude_modulation, self.time))
         else:
             if self.Qcrit is None:
                 with np.errstate(divide='ignore'):
@@ -282,7 +282,7 @@ class Pulse:
         # perform FFT and calculate bandwidth
         A0fft = np.abs(np.fft.fftshift(np.fft.fft(tpulse.amplitude_modulation, zf)))
         f = np.fft.fftshift(np.fft.fftfreq(zf, dt))
-        intg = cumtrapz(A0fft, initial=0)
+        intg = cumulative_trapezoid(A0fft, initial=0)
         idx = np.argmin(np.abs(intg - 0.5 * np.max(intg)))
         indbw = np.squeeze(np.argwhere(A0fft[idx:] > 0.1 * max(A0fft)))
         AM_BW = 2 * (f[idx + indbw[-1] + 1] - f[idx])
