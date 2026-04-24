@@ -1,6 +1,6 @@
 from functools import wraps
 import numpy as np
-from scipy.integrate import cumtrapz
+from scipy.integrate import cumulative_trapezoid
 
 AmplitudeModulations = {}
 FrequencyModulations = {}
@@ -387,8 +387,8 @@ def uniformq(Pulse):
     ------
     None"""
 
-    freq = cumtrapz(Pulse.amplitude_modulation**2, Pulse.ti, initial=0) / np.trapz(Pulse.amplitude_modulation**2, Pulse.ti, )
+    freq = cumulative_trapezoid(Pulse.amplitude_modulation**2, Pulse.ti, initial=0) / np.trapezoid(Pulse.amplitude_modulation**2, Pulse.ti, )
     freq = (Pulse.freq[1] - Pulse.freq[0]) * (freq - 1/2)
-    phase = 2 * np.pi * cumtrapz(freq, Pulse.ti, initial=0)
+    phase = 2 * np.pi * cumulative_trapezoid(freq, Pulse.ti, initial=0)
     phase += np.abs(min(phase))
     return freq, phase
